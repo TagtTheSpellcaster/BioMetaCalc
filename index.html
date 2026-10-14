@@ -2609,41 +2609,34 @@ xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' heig
         }
       };
       /* ===== Energy needs ===== */
-      const tabEnergy = {
-        id: "energy",
-        title: "Energy needs",
-        group: "Body",
-        desc: "Basal metabolism by four methods, plus a 24-hour activity schedule that gives your daily energy need.",
-        icon: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
-        html: () => `<div class="grid"><div class="card wide"><h2>Basal metabolic rate</h2><div class="tw"><table><tr><th class="t"></th><th>Method 1</th><th>Method 2</th><th>Method 3</th><th>Method 4</th></tr><tr><td>Basal metabolism (kcal/day)</td>${[0,1,2,3].map(i=>`<td>${O("f-b"+i)}</td>`).join("")}</tr><tr><td>Calories burned per hour</td>${[0,1,2,3].map(i=>`<td>${O("f-h"+i)}</td>`).join("")}</tr></table></div><p class="note">Method 1: weight × 24 (×0.85 for women). Method 2: age-band table (Schofield/WHO). Method 3: Harris-Benedict. Method 4: Mifflin-St Jeor.</p><div style="margin-top:12px">${ROW("Adapted resting need (kcal/hour)",O("f-adjh"))}${ROW("Adapted resting need (kcal/day)",O("f-adjd"))}</div><p class="note">Hourly Method 4 value × lean-mass fraction (US Navy), as in the original workbook.</p></div><div class="card"><h2>Metabolism from activity</h2><div class="tw"><table><tr><th class="t">Activity</th><th>Hours</th><th>Men</th><th>Women</th><th>Coeff.</th></tr>
+      const tabEnergy={id:"energy",title:"Energy needs",group:"Body",desc:"Basal metabolism by four methods, plus a 24-hour activity schedule that gives your daily energy need.",
+icon:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+html:()=>`<div class="grid">
+<div class="card wide"><h2>Basal metabolic rate</h2>
+ <div class="tw"><table><tr><th class="t"></th><th>Method 1</th><th>Method 2</th><th>Method 3</th><th>Method 4</th></tr>
+ <tr><td>Basal metabolism (kcal/day)</td>${[0,1,2,3].map(i=>`<td>${O("f-b"+i)}</td>`).join("")}</tr>
+ <tr><td>Calories burned per hour</td>${[0,1,2,3].map(i=>`<td>${O("f-h"+i)}</td>`).join("")}</tr></table></div>
+ <p class="note">Method 1: weight × 24 (×0.85 for women). Method 2: age-band table (Schofield/WHO). Method 3: Harris-Benedict. Method 4: Mifflin-St Jeor.</p>
+ <div style="margin-top:12px">${ROW("Adapted resting need (kcal/hour)",O("f-adjh"))}${ROW("Adapted resting need (kcal/day)",O("f-adjd"))}</div>
+ <p class="note">Hourly Method 4 value × lean-mass fraction (US Navy), as in the original workbook.</p>
+</div>
+<div class="card"><h2>Metabolism from activity</h2>
+ <div class="tw"><table><tr><th class="t">Activity</th><th>Hours</th><th>Men</th><th>Women</th><th>Coeff.</th></tr>
  ${ACTS.map(([n,c],i)=>`<tr><td>${n}</td><td>${O("f-ah"+i)}</td><td>${O("f-am"+i)}</td><td>${O("f-af"+i)}</td><td>${nf(c,2)}</td></tr>`).join("")}
  <tr class="tot"><td>Total</td><td>${O("f-th")}</td><td>${O("f-sm")}</td><td>${O("f-sf")}</td><td></td></tr></table></div>
  ${ROW("Daily energy need",O("f-need"),"big")}
- <div class="alert" id="f-alert"></div></div><div class="card"><h2>24-hour schedule</h2><div class="tw" style="max-height:560px"><table><tr><th class="t">Hour</th><th class="t">Activity</th></tr>
- ${Array.from({length:24},(_,i)=>` < tr > < td > $ {
-          String(i).padStart(2, "0")
-        }: 00– $ {
-          String((i + 1) % 24).padStart(2, "0")
-        }: 00 < /td><td class="t">${SEL("schedule."+i,ACTS.map(a=>a[0]))}</td > < /tr>`).join("")}</table > < /div></div > < /div>`,
-        update() {
-          [0, 1, 2, 3].forEach(i => {
-            set("f-b" + i, nf(M.bmr[i]));
-            set("f-h" + i, nf(M.bmrH[i], 1))
-          });
-          set("f-adjh", nf(M.adjH, 1));
-          set("f-adjd", nf(M.adjD));
-          ACTS.forEach((a, i) => {
-            set("f-ah" + i, String(M.actHours[i]));
-            set("f-am" + i, nf(M.actM[i]));
-            set("f-af" + i, nf(M.actF[i]))
-          });
-          set("f-th", String(M.totHours));
-          set("f-sm", nf(M.sumM));
-          set("f-sf", nf(M.sumF));
-          set("f-need", M.need == null ? "–" : nf(M.need) + " kcal");
-          setAlert("f-alert", M.totHours !== 24 ? `The schedule covers ${M.totHours} hours; it must cover exactly 24 to give a daily need.` : (M.adjH == null ? "Sex, weight, height, age and the circumferences (for US Navy lean mass) are required." : ""));
-        }
-      };
+ <div class="alert" id="f-alert"></div>
+</div>
+<div class="card"><h2>24-hour schedule</h2>
+ <div class="tw" style="max-height:560px"><table><tr><th class="t">Hour</th><th class="t">Activity</th></tr>
+ ${Array.from({length:24},(_,i)=>`<tr><td>${String(i).padStart(2,"0")}:00 – ${String((i+1)%24).padStart(2,"0")}:00</td><td class="t">${SEL("schedule."+i,ACTS.map(a=>a[0]))}</td></tr>`).join("")}</table></div>
+</div></div>`,
+update(){
+ [0,1,2,3].forEach(i=>{set("f-b"+i,nf(M.bmr[i]));set("f-h"+i,nf(M.bmrH[i],1))});
+ set("f-adjh",nf(M.adjH,1));set("f-adjd",nf(M.adjD));
+ ACTS.forEach((a,i)=>{set("f-ah"+i,String(M.actHours[i]));set("f-am"+i,nf(M.actM[i]));set("f-af"+i,nf(M.actF[i]))});
+ set("f-th",String(M.totHours));set("f-sm",nf(M.sumM));set("f-sf",nf(M.sumF));set("f-need",M.need==null?"–":nf(M.need)+" kcal");
+ setAlert("f-alert",M.totHours!==24?`The schedule covers ${M.totHours} hours; it must cover exactly 24 to give a daily need.`:(M.adjH==null?"Sex, weight, height, age and the circumferences (for US Navy lean mass) are required.":""));}};
       /* ===== Goal & forecast ===== */
       const tabGoal = {
         id: "goal",
