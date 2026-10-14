@@ -1,0 +1,3350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="BioMetaCalc: BMI, body composition, calorie needs, weight-loss planning, training logs and nutrition calculators in one offline web app.">
+    <meta name="theme-color" content="#1a7f45">
+    <title>BioMetaCalc</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg
+xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a7f45'/%3E%3Cpath d='M6 21l6-7 5 4 9-10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f2f5f0;
+        --surface: #fff;
+        --surface-2: #e9efe8;
+        --tint: #e3f1e8;
+        --line: #d6dfd4;
+        --line-soft: #e6ece4;
+        --ink: #11211a;
+        --ink-2: #46574d;
+        --ink-3: #74847a;
+        --accent: #1a7f45;
+        --accent-strong: #14663a;
+        --accent-ink: #fff;
+        --accent-soft: #dcefe3;
+        --warn: #8a5200;
+        --warn-bg: #fff3d6;
+        --bad: #b3261e;
+        --ok: #1a7f45;
+        --s1: #1a7f45;
+        --s2: #46574d;
+        --fat: #9aa89f;
+        --side: #10231a;
+        --side-ink: #cfe0d5;
+        --side-dim: #8fa597;
+        --side-line: #1d3427;
+        --side-on: #1f4a31;
+      }
+
+      @media (prefers-color-scheme:dark) {
+        :root:where(:not([data-theme="light"])) {
+          color-scheme: dark;
+          --bg: #0e1411;
+          --surface: #151c18;
+          --surface-2: #1e2822;
+          --tint: #173325;
+          --line: #2a362e;
+          --line-soft: #222d26;
+          --ink: #e9f1ec;
+          --ink-2: #aebcb3;
+          --ink-3: #7c8c83;
+          --accent: #4cc58a;
+          --accent-strong: #6fd5a2;
+          --accent-ink: #06210f;
+          --accent-soft: #173325;
+          --warn: #e8b862;
+          --warn-bg: #2f2610;
+          --bad: #f0837b;
+          --ok: #4cc58a;
+          --s1: #4cc58a;
+          --s2: #aebcb3;
+          --fat: #5d6c63;
+          --side: #0a0f0c;
+          --side-ink: #d3e3d9;
+          --side-dim: #7f9187;
+          --side-line: #18221c;
+          --side-on: #173325
+        }
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0e1411;
+        --surface: #151c18;
+        --surface-2: #1e2822;
+        --tint: #173325;
+        --line: #2a362e;
+        --line-soft: #222d26;
+        --ink: #e9f1ec;
+        --ink-2: #aebcb3;
+        --ink-3: #7c8c83;
+        --accent: #4cc58a;
+        --accent-strong: #6fd5a2;
+        --accent-ink: #06210f;
+        --accent-soft: #173325;
+        --warn: #e8b862;
+        --warn-bg: #2f2610;
+        --bad: #f0837b;
+        --ok: #4cc58a;
+        --s1: #4cc58a;
+        --s2: #aebcb3;
+        --fat: #5d6c63;
+        --side: #0a0f0c;
+        --side-ink: #d3e3d9;
+        --side-dim: #7f9187;
+        --side-line: #18221c;
+        --side-on: #173325
+      }
+
+      * {
+        box-sizing: border-box
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 14px/1.5 "Segoe UI Variable Text", "SF Pro Text", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+        font-feature-settings: "tnum"1
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh
+      }
+
+      /* sidebar */
+      .side {
+        background: var(--side);
+        color: var(--side-ink);
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 18px 12px;
+        scrollbar-width: thin
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2px 8px 18px;
+        font-size: 17px;
+        font-weight: 650;
+        letter-spacing: -.01em;
+        color: #fff
+      }
+
+      .brand svg {
+        width: 28px;
+        height: 28px;
+        flex: none
+      }
+
+      .grp {
+        margin: 14px 8px 4px;
+        color: var(--side-dim);
+        font-size: 12px;
+        font-weight: 600
+      }
+
+      .nb {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: 0;
+        background: none;
+        color: var(--side-ink);
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left
+      }
+
+      .nb svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: .85
+      }
+
+      .nb:hover {
+        background: var(--side-line)
+      }
+
+      .nb[aria-current="page"] {
+        background: var(--side-on);
+        color: #fff;
+        box-shadow: inset 3px 0 0 var(--accent)
+      }
+
+      .side-foot {
+        margin-top: auto;
+        padding-top: 16px;
+        display: grid;
+        gap: 6px
+      }
+
+      .side-foot .nb {
+        font-size: 13px;
+        color: var(--side-dim)
+      }
+
+      .side-foot .nb:hover {
+        color: var(--side-ink)
+      }
+
+      .mtop {
+        display: none
+      }
+
+      /* main */
+      main {
+        padding: 26px 32px 56px;
+        max-width: 1240px;
+        width: 100%
+      }
+
+      .ph {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 10px 20px;
+        margin-bottom: 20px
+      }
+
+      h1 {
+        font-size: 24px;
+        line-height: 1.2;
+        margin: 0;
+        font-weight: 650;
+        letter-spacing: -.02em
+      }
+
+      .ph p {
+        margin: 4px 0 0;
+        color: var(--ink-2);
+        max-width: 60ch
+      }
+
+      h2 {
+        font-size: 15px;
+        margin: 0 0 12px;
+        font-weight: 650;
+        letter-spacing: -.005em
+      }
+
+      h3 {
+        font-size: 13px;
+        margin: 16px 0 6px;
+        font-weight: 650;
+        color: var(--ink-2)
+      }
+
+      .tab {
+        display: none
+      }
+
+      .tab.on {
+        display: block
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        align-items: start
+      }
+
+      .panel,
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px;
+        min-width: 0
+      }
+
+      .card.wide,
+      .panel.wide {
+        grid-column: 1/-1
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.1fr) minmax(90px, 1fr);
+        gap: 6px 12px;
+        align-items: center;
+        padding: 4px 0
+      }
+
+      .row>label,
+      .row>.l {
+        color: var(--ink-2)
+      }
+
+      .row .v {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        text-align: right
+      }
+
+      .row.big .v {
+        font-size: 20px;
+        letter-spacing: -.01em
+      }
+
+      input[type=number],
+      input[type=text],
+      input[type=date],
+      select {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 7px 9px;
+        width: 100%;
+        min-width: 0;
+        min-height: 34px
+      }
+
+      input:focus-visible,
+      select:focus-visible,
+      button:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px
+      }
+
+      input:disabled {
+        background: var(--surface-2);
+        color: var(--ink-2)
+      }
+
+      .btn {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 7px 12px;
+        cursor: pointer;
+        min-height: 34px
+      }
+
+      .btn:hover {
+        background: var(--surface-2)
+      }
+
+      .btn.pri {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+        font-weight: 600
+      }
+
+      .btn.pri:hover {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong)
+      }
+
+      .btn.sm {
+        padding: 2px 9px;
+        min-height: 28px;
+        font-size: 13px
+      }
+
+      .note {
+        color: var(--ink-3);
+        font-size: 12.5px;
+        margin: 8px 0 0;
+        max-width: 80ch
+      }
+
+      .alert {
+        background: var(--warn-bg);
+        color: var(--warn);
+        border-radius: 8px;
+        padding: 9px 12px;
+        margin: 10px 0;
+        font-size: 13px
+      }
+
+      .alert:empty {
+        display: none
+      }
+
+      .tw {
+        overflow: auto;
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface)
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-variant-numeric: tabular-nums
+      }
+
+      th,
+      td {
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--line-soft);
+        text-align: right;
+        white-space: nowrap
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        background: var(--surface-2);
+        font-weight: 600;
+        color: var(--ink-2);
+        font-size: 12.5px;
+        z-index: 1
+      }
+
+      th:first-child,
+      td:first-child,
+      td.t,
+      th.t {
+        text-align: left
+      }
+
+      td input {
+        padding: 4px 7px;
+        min-width: 64px;
+        min-height: 30px
+      }
+
+      td input.w-s {
+        width: 72px
+      }
+
+      td input.w-xs {
+        width: 60px
+      }
+
+      td input.w-m {
+        width: 104px
+      }
+
+      td input.w-l {
+        min-width: 240px
+      }
+
+      tr.tot td {
+        font-weight: 650;
+        background: var(--surface-2)
+      }
+
+      tr.sun td {
+        background: color-mix(in srgb, var(--surface-2) 50%, transparent)
+      }
+
+      .bad {
+        color: var(--bad)
+      }
+
+      .ok {
+        color: var(--ok)
+      }
+
+      .mut {
+        color: var(--ink-3)
+      }
+
+      .bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 0 0 12px
+      }
+
+      .bar label {
+        color: var(--ink-2);
+        display: flex;
+        gap: 8px;
+        align-items: center
+      }
+
+      .bar input[type=number],
+      .bar input[type=text],
+      .bar input[type=date] {
+        width: auto
+      }
+
+      .meal {
+        margin-bottom: 18px
+      }
+
+      .meal-h {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+        flex-wrap: wrap
+      }
+
+      .meal-h input {
+        max-width: 320px;
+        font-weight: 600
+      }
+
+      td.unk input {
+        border-color: var(--bad)
+      }
+
+      .tip {
+        position: absolute;
+        pointer-events: none;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12.5px;
+        box-shadow: 0 4px 14px #0003;
+        display: none;
+        white-space: nowrap;
+        z-index: 3
+      }
+
+      .chart {
+        position: relative
+      }
+
+      .chart svg {
+        width: 100%;
+        height: auto;
+        display: block;
+        touch-action: pan-y
+      }
+
+      .legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        margin-bottom: 8px
+      }
+
+      .legend i {
+        display: inline-block;
+        width: 18px;
+        height: 0;
+        border-top: 2px solid;
+        vertical-align: middle;
+        margin-right: 6px
+      }
+
+      /* dashboard */
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 16px;
+        margin-bottom: 16px
+      }
+
+      .hero-main {
+        background: var(--tint);
+        border-radius: 14px;
+        padding: 22px 22px 14px;
+        min-width: 0
+      }
+
+      .lead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 14px
+      }
+
+      .lead .n {
+        font-size: 52px;
+        line-height: 1;
+        font-weight: 600;
+        letter-spacing: -.035em;
+        font-variant-numeric: tabular-nums
+      }
+
+      .lead .u {
+        font-size: 18px;
+        color: var(--ink-2);
+        margin-left: -8px
+      }
+
+      .lead .s {
+        color: var(--ink-2);
+        font-size: 14px
+      }
+
+      .track {
+        margin: 24px 8px 8px;
+        position: relative;
+        height: 56px
+      }
+
+      .track .rail {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 20px;
+        height: 8px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--ink) 14%, transparent)
+      }
+
+      .track .fill {
+        position: absolute;
+        left: 0;
+        top: 20px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--accent)
+      }
+
+      .track .mk {
+        position: absolute;
+        top: 14px;
+        width: 20px;
+        height: 20px;
+        margin-left: -10px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 3px solid var(--ink-2)
+      }
+
+      .track .mk.cur {
+        border-color: var(--accent);
+        background: var(--accent)
+      }
+
+      .track .lb {
+        position: absolute;
+        top: 36px;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        white-space: nowrap;
+        transform: translateX(-50%)
+      }
+
+      .track .lb b {
+        color: var(--ink);
+        font-weight: 650
+      }
+
+      .track .lb.top {
+        top: -4px
+      }
+
+      .track .lb.l {
+        transform: none
+      }
+
+      .track .lb.r {
+        transform: translateX(-100%)
+      }
+
+      .hero-main .chart {
+        margin-top: 6px
+      }
+
+      .stats {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 6px 18px;
+        align-self: stretch
+      }
+
+      .stat {
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line-soft)
+      }
+
+      .stat:last-child {
+        border-bottom: 0
+      }
+
+      .stat .k {
+        color: var(--ink-2);
+        font-size: 12.5px
+      }
+
+      .stat .n {
+        font-size: 22px;
+        font-weight: 620;
+        letter-spacing: -.015em;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums
+      }
+
+      .stat .d {
+        color: var(--ink-3);
+        font-size: 12.5px
+      }
+
+      .trio {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+        margin-bottom: 16px
+      }
+
+      .hb {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.7fr) 2fr auto;
+        gap: 4px 10px;
+        align-items: center;
+        padding: 3px 0;
+        font-size: 13px
+      }
+
+      .hb .tr {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--surface-2);
+        overflow: hidden
+      }
+
+      .hb .tr i {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+        border-radius: 4px
+      }
+
+      .hb .vv {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        min-width: 48px
+      }
+
+      .seg {
+        display: flex;
+        height: 26px;
+        border-radius: 6px;
+        overflow: hidden;
+        gap: 2px;
+        margin: 6px 0 4px
+      }
+
+      .seg i {
+        display: block;
+        height: 100%
+      }
+
+      .seg-l {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        margin-bottom: 12px
+      }
+
+      .attn {
+        margin: 0;
+        padding: 0;
+        list-style: none
+      }
+
+      .attn li {
+        padding: 8px 0 8px 14px;
+        border-bottom: 1px solid var(--line-soft);
+        position: relative
+      }
+
+      .attn li:last-child {
+        border-bottom: 0
+      }
+
+      .attn li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 15px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--warn)
+      }
+
+      .attn li.good::before {
+        background: var(--accent)
+      }
+
+      .empty {
+        color: var(--ink-3)
+      }
+
+      details.card summary {
+        cursor: pointer;
+        font-weight: 600
+      }
+
+      @media (max-width:1020px) {
+        .hero {
+          grid-template-columns: 1fr
+        }
+
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          column-gap: 20px
+        }
+
+        .stat {
+          border-bottom: 1px solid var(--line-soft)
+        }
+      }
+
+      @media (max-width:820px) {
+        .app {
+          grid-template-columns: 1fr
+        }
+
+        .side {
+          position: fixed;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 272px;
+          z-index: 20;
+          transform: translateX(-100%);
+          transition: transform .2s
+        }
+
+        .side.open {
+          transform: none;
+          box-shadow: 0 0 0 100vmax #0006
+        }
+
+        .mtop {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: var(--surface);
+          border-bottom: 1px solid var(--line);
+          padding: 10px 14px;
+          font-weight: 650
+        }
+
+        .mtop button {
+          background: none;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          width: 38px;
+          height: 38px;
+          cursor: pointer
+        }
+
+        main {
+          padding: 18px 14px 48px
+        }
+
+        .lead .n {
+          font-size: 42px
+        }
+
+        .row {
+          grid-template-columns: 1fr 1fr
+        }
+      }
+
+      @media (prefers-reduced-motion:reduce) {
+        .side {
+          transition: none
+        }
+      }
+
+      @media print {
+
+        .side,
+        .mtop,
+        .bar button {
+          display: none
+        }
+
+        .app {
+          display: block
+        }
+
+        .tab {
+          display: block !important;
+          break-after: page
+        }
+
+        body {
+          background: #fff
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mtop"><button id="menu" aria-label="Open menu">☰</button><span>BioMetaCalc</span></div>
+    <div class="app">
+      <aside class="side" id="side">
+        <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#1a7f45" />
+            <path d="M6 21l6-7 5 4 9-10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>BioMetaCalc</div>
+        <nav id="nav" aria-label="Sections"></nav>
+        <div class="side-foot"><input id="file" type="file" accept="application/json" hidden><button class="nb" data-act="theme"><svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            </svg><span id="theme-l">Theme: system</span></button><button class="nb" data-act="export"><svg viewBox="0 0 24 24">
+              <path d="M12 3v12M7 10l5 5 5-5M4 21h16" />
+            </svg>Export data</button><button class="nb" data-act="import"><svg viewBox="0 0 24 24">
+              <path d="M12 15V3M7 8l5-5 5 5M4 21h16" />
+            </svg>Import data</button><button class="nb" data-act="reset"><svg viewBox="0 0 24 24">
+              <path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8M3 3v5h5" />
+            </svg>Restore sample data</button></div>
+      </aside>
+      <main id="main"></main>
+    </div><datalist id="foodlist"></datalist>
+    <script type="application/json" id="foods-data">
+      [
+        ["acciughe o alici", 96, 16.8, 1.5, 2.6, 0, "anchovies"],
+        ["acciughe o alici in pasta", 194, 21.5, 0, 12, 0, "anchovy paste"],
+        ["acciughe o alici sott'olio", 206, 25.9, 0.2, 11.3, 0, "anchovies in oil"],
+        ["acciughe o alici sotto sale", 128, 25, 0, 3.1, 0, "anchovies, salted"],
+        ["aceto", 4, 0.4, 0.6, 0, 0, "vinegar"],
+        ["acqua", 0, 0, 0, 0, 0, "water"],
+        ["acqua tonica", 33, 0, 8.8, 0, 0, "tonic water"],
+        ["agar agar", 16, 1.6, 0, 1.2, 81.1, "agar agar"],
+        ["aglio, fresco", 41, 0.9, 8.4, 0.6, 2.3, "garlic, fresh"],
+        ["aglio, in polvere", 246, 18.7, 42.7, 1.2, 9.9, "garlic powder"],
+        ["agnello", 162, 20.8, 0, 8.8, 0, "lamb"],
+        ["agnello, carne grassa", 279, 18, 0, 23, 0, "lamb, fatty meat"],
+        ["agnello, carne magra", 121, 20, 0, 4.6, 0, "lamb, lean meat"],
+        ["agnello, carne semigrassa", 211, 19, 0, 15, 0, "lamb, medium-fat meat"],
+        ["agnello, coratella", 110, 15.7, 1.2, 4.7, 0, "lamb, offal (coratella)"],
+        ["agnello, costolette", 386, 14.6, 0, 36.3, 0, "lamb, chops"],
+        ["agretti", 17, 1.8, 2.2, 0.2, 2.3, "agretti (saltwort)"],
+        ["albicocche", 28, 0.4, 6.8, 0.1, 1.5, "apricots"],
+        ["albicocche, polpa secca", 188, 4.8, 43.4, 0.7, 21.6, "apricots, dried"],
+        ["alcool puro (99°)", 700, 0, 0, 0, 0, "pure alcohol (99 proof)"],
+        ["all-bran", 280, 14, 48, 3.5, 27, "all-bran"],
+        ["alloro, secco", 313, 7.6, 48.6, 8.4, 26.3, "bay leaf, dried"],
+        ["amarene", 41, 0.8, 10.2, 0, 1.1, "sour cherries (amarene)"],
+        ["amari a bassa gradazione (tra 23 e 30 %vol)", 261, 0, 32.8, 0, 0, "bitter liqueurs, low alcohol (23 to 30 %vol)"],
+        ["amari ad alta gradazione (superiori a 35 %vol)", 232, 0, 0.5, 0, 0, "bitter liqueurs, high alcohol (over 35 %vol)"],
+        ["amido", 379, 0.4, 100.1, 0.2, 0, "starch"],
+        ["ananas", 40, 0.5, 10, 0, 1, "pineapple"],
+        ["ananas sciroppata", 77, 0.3, 20.2, 0, 0.9, "pineapple, in syrup"],
+        ["anatra", 159, 21.4, 0, 8.2, 0, "duck"],
+        ["anguilla di fiume", 261, 11.8, 0.1, 23.7, 0, "eel, river"],
+        ["anguilla di mare", 237, 14.6, 0.7, 19.6, 0, "eel, sea"],
+        ["anguilla marinata", 259, 14.8, 0.6, 21.9, 0, "eel, marinated"],
+        ["aperitivi (fino a 22 %vol)", 186, 0, 17, 0, 0, "aperitifs (up to 22 %vol)"],
+        ["arachidi crude", 571, 26, 11.2, 47.2, 7.3, "peanuts, raw"],
+        ["arachidi tostate", 597, 29, 8.5, 50, 10.9, "peanuts, roasted"],
+        ["arachidi tostate e salate", 602, 24.5, 7.1, 53, 6.9, "peanuts, roasted and salted"],
+        ["aragosta", 86, 16.2, 1, 1.9, 0, "spiny lobster"],
+        ["arance", 34, 0.7, 7.8, 0.2, 1.6, "oranges"],
+        ["arance, scorza", 97, 1.5, 14.4, 0.2, 10.6, "oranges, peel"],
+        ["aranciata in lattina", 38, 0.1, 10, 0, 0, "orange soda, canned"],
+        ["aringa", 190, 17.8, 0, 13.2, 0, "herring"],
+        ["aringa affumicata", 194, 19.9, 0, 12.7, 0, "herring, smoked"],
+        ["aringa marinata", 199, 18.3, 0, 14, 0, "herring, marinated"],
+        ["aringa salata", 218, 19.8, 0, 15.4, 0, "herring, salted"],
+        ["asiago", 356, 31.4, 0, 25.6, 0, "asiago cheese"],
+        ["asparagi di bosco", 35, 4.6, 4, 0.2, 2.6, "asparagus, wild"],
+        ["asparagi di campo", 29, 3.6, 3.3, 0.2, 2.1, "asparagus, field"],
+        ["asparagi di serra", 24, 3, 3, 0.1, 2.1, "asparagus, greenhouse"],
+        ["asparagi in scatola", 19, 2.1, 0.9, 0.7, 1.6, "asparagus, canned"],
+        ["astice", 90, 18.8, 0.5, 0.9, 0, "lobster"],
+        ["avena", 389, 16.9, 55.7, 6.9, 10.6, "oats"],
+        ["avocado", 231, 4.4, 1.8, 23, 3.3, "avocado"],
+        ["babà al rhum", 252, 5.9, 41.4, 5.7, 0.9, "baba au rhum"],
+        ["babaco", 21, 0.7, 4.5, 0.1, 1.1, "babaco"],
+        ["baccalà, ammollato", 95, 21.6, 0, 1, 0, "salt cod, soaked"],
+        ["baccalà, secco", 122, 29, 0, 0.7, 0, "salt cod, dried"],
+        ["banana", 66, 1.2, 15.5, 0.3, 1.8, "banana"],
+        ["barbabietole rosse", 20, 1.1, 4, 0, 2.6, "beetroot"],
+        ["basilico, fresco", 40, 3.1, 5.1, 0.8, 5.2, "basil, fresh"],
+        ["basilico, secco macinato", 251, 14.4, 43.2, 4, 17.8, "basil, dried ground"],
+        ["bastoncini di pesce", 194, 11, 15, 10, 0, "fish sticks"],
+        ["bevande gassate dietetiche", 17, 0, 4.3, 0, 0, "diet carbonated drinks"],
+        ["bieta", 17, 1.3, 2.8, 0.1, 1.2, "chard"],
+        ["bieta in scatola", 31, 0.9, 5.5, 0.1, 1.7, "chard, canned"],
+        ["bignè", 318, 4.6, 43, 15.4, 0.5, "cream puffs (bigne)"],
+        ["birra chiara", 34, 0.2, 3.5, 0, 0, "beer, light"],
+        ["birra scura", 30, 0.3, 3, 0, 0, "beer, dark"],
+        ["biscotti 'petit beurre'", 415, 6, 84.7, 8.2, 0.4, "petit beurre biscuits"],
+        ["biscotti al latte", 417, 13.8, 76.1, 8.5, 1.2, "milk biscuits"],
+        ["biscotti frollini", 493, 7.4, 68.5, 21, 1.5, "shortbread biscuits"],
+        ["biscotti integrali", 448, 8.5, 59.5, 19.5, 8, "whole wheat biscuits"],
+        ["biscotti per l'infanzia", 417, 13.8, 76.1, 8.5, 0.2, "biscuits for infants"],
+        ["biscotti ricoperti al cioccolato", 524, 5.7, 67.4, 27.6, 2.9, "chocolate-covered biscuits"],
+        ["biscotti savoiardo", 392, 11.9, 69.8, 9.2, 1.8, "ladyfinger biscuits (savoiardi)"],
+        ["biscotti wafer", 454, 7.1, 77.6, 15, 1.6, "wafer biscuits"],
+        ["biscotto per la prima colazione", 418, 6.6, 85.4, 7.9, 5.7, "breakfast biscuit"],
+        ["bovino, cervello", 157, 9.8, 0.8, 12.7, 0, "beef, brain"],
+        ["bovino, cuore", 123, 16.8, 0.5, 6, 0, "beef, heart"],
+        ["bovino, fegato", 146, 21, 5.9, 4.4, 0, "beef, liver"],
+        ["bovino, lessato in gelatina, in scatola", 87, 13.9, 0, 3.5, 0, "beef, boiled in jelly, canned"],
+        ["bovino, lingua", 231, 17.1, 0.4, 18, 0, "beef, tongue"],
+        ["bovino, lingua salmistrata", 260, 22.5, 0.2, 18.8, 0, "beef, tongue, salt-cured"],
+        ["bovino, midollo osseo", 822, 3.2, 0, 89.9, 0, "beef, bone marrow"],
+        ["bovino, milza", 107, 18.5, 0, 3.7, 0, "beef, spleen"],
+        ["bovino, polmone", 75, 14, 0, 2.1, 0, "beef, lung"],
+        ["bovino, rene", 118, 18.4, 0.8, 4.6, 0, "beef, kidney"],
+        ["bovino, sangue", 75, 17.8, 0.8, 0.1, 0, "beef, blood"],
+        ["bovino, trippa", 108, 15.8, 0, 5, 0, "beef, tripe"],
+        ["bra", 328, 30.7, 0, 22.8, 0, "bra cheese"],
+        ["brandy", 224, 0, 0, 0, 0, "brandy"],
+        ["bresaola", 175, 34, 0, 4.3, 0, "bresaola (air-dried beef)"],
+        ["brie", 319, 19.3, 0, 26.9, 0, "brie"],
+        ["brioches", 413, 7.2, 58.4, 18.3, 2.5, "brioches"],
+        ["brioches con crema", 391, 6.9, 55.6, 17.1, 2.3, "brioches with custard"],
+        ["brioches con marmellata", 394, 6.5, 58.4, 16.5, 2.5, "brioches with jam"],
+        ["broccoletti di rape", 22, 2.9, 2, 0.3, 2.9, "turnip greens (broccoletti di rape)"],
+        ["broccolo a testa", 27, 3, 3.1, 0.4, 3.1, "broccoli, head"],
+        ["brodo di carne e verdura", 5, 0.7, 0.1, 0.2, 0, "meat and vegetable broth"],
+        ["brodo di carne varia", 7, 1.1, 0, 0.2, 0, "mixed meat broth"],
+        ["brodo di dado", 3, 0.3, 0.1, 0.4, 0, "bouillon cube broth"],
+        ["brodo di gallina", 9, 0.6, 0.6, 0.5, 0, "chicken broth (hen)"],
+        ["brodo vegetale", 5, 0.3, 0.3, 0.4, 0, "vegetable broth"],
+        ["buccia d'arancia candita", 313, 0.2, 82.7, 0.2, 1.1, "candied orange peel"],
+        ["budino al cioccolato", 133, 2.7, 21.8, 4, 1, "chocolate pudding"],
+        ["budino alla vaniglia", 130, 2.3, 21.8, 3.6, 0.1, "vanilla pudding"],
+        ["burrata", 396, 15.2, 5.7, 34.9, 0, "burrata"],
+        ["burrini", 517, 22.1, 1.6, 47, 0, "burrini (butter-filled cheese)"],
+        ["burro", 758, 0.8, 1.1, 83.4, 0, "butter"],
+        ["burro di arachidi", 623, 22.6, 13.1, 53.7, 6.8, "peanut butter"],
+        ["cacao amaro, in polvere", 355, 20.4, 11.5, 25.6, 28.9, "cocoa, unsweetened, powder"],
+        ["cacao dolce, in polvere, solubile", 349, 4.5, 67.7, 8.6, 7.3, "cocoa, sweetened, powder, soluble"],
+        ["caciocavallo", 439, 37.7, 2.1, 31.1, 0, "caciocavallo cheese"],
+        ["caciocavallo affumicato", 439, 37.7, 2.1, 31.1, 0, "caciocavallo cheese, smoked"],
+        ["caciotta affumicata", 364, 27.7, 2.1, 27.3, 0, "caciotta cheese, smoked"],
+        ["caciotta romana di pecora", 364, 27.7, 2.1, 27.3, 0, "caciotta romana cheese, sheep"],
+        ["caciotta toscana", 373, 24.6, 2.1, 29.6, 0, "caciotta toscana cheese"],
+        ["caciottina fresca", 261, 17.3, 0, 21.3, 0, "caciottina cheese, fresh"],
+        ["caffè all'americana, in tazza", 2, 0.1, 0.4, 0, 0, "coffee, American style, brewed"],
+        ["caffè bar, in tazza", 4, 0.4, 0.6, 0, 0, "coffee, bar style, brewed"],
+        ["caffè crudo, in grani", 190, 11.2, 6.7, 13.1, 49.5, "coffee, raw, beans"],
+        ["caffè decaffeinato, in tazza", 4, 0.4, 0.6, 0, 0, "coffee, decaffeinated, brewed"],
+        ["caffè decaffeinato, tostato, macinato", 287, 10.4, 28.5, 15.4, 0, "coffee, decaffeinated, roasted, ground"],
+        ["caffè moka, in tazza", 4, 0.4, 0.6, 0, 0, "coffee, moka pot, brewed"],
+        ["caffè solubile, decaffeinato, in polvere", 224, 13.9, 42.6, 0.2, 0, "coffee, instant, decaffeinated, powder"],
+        ["caffè solubile, decaffeinato, in tazza", 0, 0, 0, 0, 0, "coffee, instant, decaffeinated, brewed"],
+        ["caffè solubile, in polvere", 223, 20.4, 41.1, 0, 0, "coffee, instant, powder"],
+        ["caffè solubile, in tazza", 0, 0, 0, 0, 0, "coffee, instant, brewed"],
+        ["caffè tostato, macinato", 287, 10.4, 28.5, 15.4, 0, "coffee, roasted, ground"],
+        ["calamaro", 68, 12.6, 0.6, 1.7, 0, "squid"],
+        ["calamaro surgelato", 70, 13.5, 1, 1.4, 0, "squid, frozen"],
+        ["camembert", 297, 20.9, 0, 23.7, 0, "camembert"],
+        ["canditi", 283, 0.5, 75, 0, 4.5, "candied fruit"],
+        ["cannella", 252, 3.9, 55.5, 3.2, 24.4, "cinnamon"],
+        ["cannoli alla crema", 369, 6.2, 42.2, 20.7, 1.1, "cannoli with cream"],
+        ["capocollo", 450, 20.8, 1.4, 40.2, 0, "capocollo"],
+        ["capperi sott'aceto", 20, 2.6, 2.1, 0.1, 1.5, "capers, pickled"],
+        ["capretto", 122, 19.2, 0, 5, 0, "kid goat"],
+        ["capriolo, coscia", 103, 22.2, 0, 1.6, 0, "roe deer, leg"],
+        ["capriolo, schiena", 122, 22.4, 0.6, 3.6, 0, "roe deer, back"],
+        ["caramelle alla frutta", 327, 2.8, 84.2, 0, 0, "fruit candies"],
+        ["caramelle alla menta", 393, 0.5, 102.7, 0.7, 0, "mint candies"],
+        ["caramelle dure", 343, 0, 91.6, 0, 0, "hard candies"],
+        ["caramelle morbide, mou", 430, 2.1, 71.1, 17.2, 0, "soft candies, toffee"],
+        ["carciofi", 22, 2.7, 2.5, 0.2, 5.5, "artichokes"],
+        ["carciofi surgelati", 38, 2.6, 3.9, 0.4, 3.9, "artichokes, frozen"],
+        ["carciofini sott'aceto", 18, 2.9, 2.7, 0.2, 5.5, "baby artichokes, pickled"],
+        ["carciofini sott'olio", 68, 1.8, 2.6, 5.7, 3.3, "baby artichokes, in oil"],
+        ["cardi", 10, 0.6, 1.7, 0.1, 1.5, "cardoons"],
+        ["carne in scatola", 61, 13, 0, 1, 0, "canned meat"],
+        ["carote", 33, 1.1, 7.6, 0, 3.1, "carrots"],
+        ["carpa", 140, 18.9, 0, 7.1, 0, "carp"],
+        ["castagne", 189, 3.5, 42.4, 1.8, 9, "chestnuts"],
+        ["castagne, secche", 349, 4.7, 80.9, 3, 13.1, "chestnuts, dried"],
+        ["castrato , carne semigrassa", 227, 16.8, 0, 17.8, 0, "mutton, medium-fat meat"],
+        ["castrato, carne grassa", 332, 16.5, 0, 29.5, 0, "mutton, fatty meat"],
+        ["castrato, carne magra", 122, 17, 0, 6, 0, "mutton, lean meat"],
+        ["cavallo", 113, 21.7, 0.5, 2.7, 0, "horse meat"],
+        ["cavallo, cuore", 146, 18.7, 0.6, 7.7, 0, "horse, heart"],
+        ["cavallo, fegato", 145, 22.4, 5.3, 4, 0, "horse, liver"],
+        ["caviale", 252, 18.9, 1.9, 18.8, 0, "caviar"],
+        ["cavolfiore", 25, 3.2, 2.7, 0.2, 2.4, "cauliflower"],
+        ["cavoli di bruxelles", 37, 4.2, 4.3, 0.5, 5.2, "brussels sprouts"],
+        ["cavolo broccolo verde ramoso", 24, 3.4, 2, 0.3, 3.1, "broccoli, green sprouting"],
+        ["cavolo cappuccio rosso", 20, 1.9, 2.7, 0.2, 1, "red cabbage"],
+        ["cavolo cappuccio verde", 19, 2.1, 2.5, 0.1, 2.9, "green cabbage"],
+        ["ceci in scatola", 56, 4.3, 7.2, 1.4, 8.1, "chickpeas, canned"],
+        ["ceci, secchi", 334, 21.8, 54.3, 4.9, 13.8, "chickpeas, dried"],
+        ["cedro candito", 187, 0.1, 49.4, 0.2, 3.3, "candied citron"],
+        ["cefalo muggine", 127, 15.8, 0.7, 6.8, 0, "grey mullet"],
+        ["cereali aggregati", 342, 10.7, 74.9, 2, 11.6, "aggregated cereals (cereal bars)"],
+        ["cernia", 80, 17.9, 0.6, 0.7, 0, "grouper"],
+        ["cernia di fondo", 125, 15.6, 0.6, 6.7, 0, "grouper, deep-sea"],
+        ["cernia surgelata", 88, 17, 0.6, 2, 0, "grouper, frozen"],
+        ["certosino", 268, 17.5, 0, 22, 0, "certosino (Bolognese spiced cake)"],
+        ["cetrioli", 14, 0.7, 1.8, 0.5, 0.6, "cucumbers"],
+        ["cetrioli in salamoia", 14, 0.9, 2.6, 0.1, 1.2, "cucumbers, brined"],
+        ["cetriolini sott'aceto", 14, 0.9, 2.6, 0.1, 1.2, "gherkins, pickled"],
+        ["champagne", 76, 0.3, 1.4, 0, 0, "champagne"],
+        ["cheddar", 381, 25, 0.5, 31, 0, "cheddar"],
+        ["cherry brandy", 255, 0, 32.6, 0, 0, "cherry brandy"],
+        ["ciccioli", 523, 40.8, 0, 40, 0, "ciccioli (pork cracklings)"],
+        ["cicoria", 10, 1.4, 0.7, 0.2, 3.6, "chicory"],
+        ["cicoria catalogna", 24, 1.8, 3.2, 0.5, 3.1, "catalogna chicory"],
+        ["cicoria da taglio", 12, 1.2, 1.7, 0.1, 3.6, "chicory, cutting"],
+        ["cicoria witloof", 17, 0.7, 3.2, 0.3, 0.6, "witloof chicory (endive)"],
+        ["ciliege", 38, 0.8, 9, 0.1, 1.3, "cherries"],
+        ["cioccolato al latte", 565, 8.9, 50.8, 37.6, 0.8, "milk chocolate"],
+        ["cioccolato bianco", 529, 8, 58.3, 30.9, 0.8, "white chocolate"],
+        ["cioccolato con nocciole", 571, 9.3, 45.9, 40.1, 1.4, "chocolate with hazelnuts"],
+        ["cioccolato fondente", 542, 5.8, 56.7, 34, 1.4, "dark chocolate"],
+        ["cioccolato gianduia", 509, 13.1, 52.7, 28.8, 2.5, "gianduia chocolate"],
+        ["cipolle", 26, 1, 5.7, 0.1, 1.1, "onions"],
+        ["cipolle, secche", 313, 10.2, 68.6, 1.7, 13, "onions, dried"],
+        ["cipolline", 38, 1.3, 8.5, 0.1, 1.7, "pearl onions"],
+        ["cipolline sott'aceto", 24, 0.9, 4.9, 0.2, 1.3, "pearl onions, pickled"],
+        ["coca cola", 39, 0, 10.5, 0, 0, "coca cola"],
+        ["cocco", 367, 9.4, 3.5, 35, 0, "coconut"],
+        ["cocomero", 15, 0.4, 3.7, 0, 0.2, "watermelon"],
+        ["cognac", 214, 0, 0.9, 0, 0, "cognac"],
+        ["confetti", 441, 5.2, 71.9, 16.7, 4.6, "sugar-coated almonds (confetti)"],
+        ["coniglio, carne grassa", 203, 18.1, 0.4, 14.4, 0, "rabbit, fatty meat"],
+        ["coniglio, carne magra", 102, 23.7, 0.6, 0.6, 0, "rabbit, lean meat"],
+        ["coniglio, carne semigrassa", 138, 22.1, 0.5, 5.3, 0, "rabbit, medium-fat meat"],
+        ["coniglio, frattaglie", 147, 18.7, 0.4, 7.9, 0, "rabbit, offal"],
+        ["cono per gelato", 366, 10.1, 78.8, 3.3, 3, "ice cream cone"],
+        ["coppa", 494, 17, 0, 47.3, 0, "coppa (cured pork neck)"],
+        ["coppa parma", 398, 23.6, 0.6, 33.5, 0, "coppa di Parma"],
+        ["corned beef in scatola", 219, 23.2, 0, 14, 0, "corned beef, canned"],
+        ["cotechino", 450, 17.2, 0, 42.3, 0, "cotechino (pork sausage)"],
+        ["cotechino, cotto", 306, 21.1, 0, 24.7, 0, "cotechino, cooked"],
+        ["cotolette pollo e spinaci COOP", 220, 11.6, 19.9, 10.4, 1.4, "chicken and spinach cutlets COOP"],
+        ["couscous", 360, 13, 72, 2, 0, "couscous"],
+        ["cozza o mitilo", 84, 11.7, 3.4, 2.7, 0, "mussels"],
+        ["crackers al formaggio", 502, 9.8, 62.1, 25.5, 2.8, "cheese crackers"],
+        ["crackers integrali", 443, 8.8, 58.1, 17.2, 10.5, "whole wheat crackers"],
+        ["crackers non salati", 440, 9.5, 68.3, 16.3, 6.1, "unsalted crackers"],
+        ["crackers salati", 428, 9.4, 80.1, 10, 2.8, "salted crackers"],
+        ["crackers senza grassi", 393, 10.5, 79.6, 1.6, 2.7, "fat-free crackers"],
+        ["cracotte", 348, 10.5, 78.8, 1.2, 9.2, "cracotte (crispy toasted wheat slices)"],
+        ["crauti", 24, 1.5, 4, 0.3, 1.1, "sauerkraut"],
+        ["crema di cacao e nocciole", 537, 6.9, 58.1, 32.4, 1.2, "chocolate hazelnut spread"],
+        ["crema di cocco", 238.55, 6.11, 2.275, 22.75, 0, "coconut cream"],
+        ["crema per pasticceria", 192, 4.8, 30.7, 6.4, 0.2, "pastry cream"],
+        ["creme caramel", 109, 3, 20.6, 2.2, 0.1, "creme caramel"],
+        ["crescione", 22, 3, 0.4, 1, 3, "watercress"],
+        ["crostata con marmellata", 339, 4.9, 65.5, 8.2, 1.6, "jam tart"],
+        ["crusca di grano", 206, 14.1, 26.8, 5.5, 39.6, "wheat bran"],
+        ["cumino, semi", 375, 17.8, 33.7, 22.3, 10.5, "cumin, seeds"],
+        ["dadi per brodo", 152, 15.7, 5, 18.7, 0.2, "bouillon cubes"],
+        ["dadi per brodo vegetale", 253, 13.5, 11.6, 17.3, 0, "vegetable bouillon cubes"],
+        ["daikon", 15, 0.8, 2.9, 0.1, 1.5, "daikon"],
+        ["datteri, freschi", 124, 1.5, 31.3, 0.1, 3.6, "dates, fresh"],
+        ["datteri, secchi", 253, 2.7, 63.1, 0.6, 8.7, "dates, dried"],
+        ["dentice", 101, 16.7, 0.7, 3.5, 0, "sea bream (dentex)"],
+        ["dentice surgelato", 103, 17.2, 0.7, 3.5, 0, "sea bream (dentex), frozen"],
+        ["dolce verde", 266, 19.1, 2.5, 20, 0, "dolce verde (sweet green cheese, Gorgonzola type)"],
+        ["dolcificante a base di saccarina", 397, 0, 98.6, 0, 0, "saccharin-based sweetener"],
+        ["dolcificante aspartame", 400, 0, 97.5, 0, 0, "aspartame sweetener"],
+        ["dolcificante fruttosio", 400, 0, 99.5, 0, 0, "fructose sweetener"],
+        ["dolcificante saccarina", 0, 0, 0, 0, 0, "saccharin sweetener"],
+        ["edam stagionato", 345, 29, 1, 25, 0, "edam, aged"],
+        ["edam, fresco", 306, 26, 1, 22, 0, "edam, fresh"],
+        ["emmenthal", 403, 28.5, 3.6, 30.6, 0, "emmental"],
+        ["erba cipollina, fresca", 23, 2.8, 1.7, 0.6, 1.9, "chives, fresh"],
+        ["estratto di carne bovina", 219, 54, 0, 0.4, 0.9, "beef extract"],
+        ["fagiano", 144, 24.3, 0, 5.2, 0, "pheasant"],
+        ["fagioli", 104, 6.4, 19.4, 0.6, 10.6, "beans"],
+        ["fagioli aduki, secchi", 272, 19.9, 50.1, 0.5, 11.1, "adzuki beans, dried"],
+        ["fagioli in scatola", 43, 4.1, 6.3, 0.5, 6.8, "beans, canned"],
+        ["fagioli mung, secchi", 279, 23.9, 46.3, 1.1, 13.9, "mung beans, dried"],
+        ["fagioli, secchi", 311, 23.6, 51.7, 2.5, 17, "beans, dried"],
+        ["fagiolini", 17, 2.1, 2.4, 0.1, 2.9, "green beans"],
+        ["fagiolini in scatola", 22, 1.5, 4.1, 0.1, 2.6, "green beans, canned"],
+        ["faraona", 158, 23.4, 0, 6.5, 0, "guinea fowl"],
+        ["faraona, coscia", 114, 24.3, 0.2, 1.8, 0, "guinea fowl, leg"],
+        ["faraona, petto", 107, 25.1, 0, 0.7, 0, "guinea fowl, breast"],
+        ["farina di avena", 388, 12.6, 72.9, 7.1, 7.6, "oat flour"],
+        ["farina di castagne", 323, 5.8, 71.6, 3.7, 10.9, "chestnut flour"],
+        ["farina di ceci", 334, 21.8, 54.3, 4.9, 13.8, "chickpea flour"],
+        ["farina di cocco", 604, 5.6, 6.4, 62, 21.1, "coconut flour"],
+        ["farina di frumento, integrale", 321, 11.9, 68.4, 1.9, 9.6, "wheat flour, whole wheat"],
+        ["farina di frumento, tipo 0", 343, 11.5, 76.9, 1, 3.5, "wheat flour, type 0"],
+        ["farina di frumento, tipo 00", 343, 11, 78, 0.7, 2.5, "wheat flour, type 00"],
+        ["farina di grano duro", 304, 12.6, 61.1, 2.8, 3.5, "durum wheat flour"],
+        ["farina di grano saraceno", 364, 8.1, 84.9, 1.5, 2.1, "buckwheat flour"],
+        ["farina di mais", 365, 8.7, 81.5, 2.7, 2.6, "corn flour"],
+        ["farina di orzo", 360, 10.6, 80, 1.9, 14.8, "barley flour"],
+        ["farina di riso", 363, 7.3, 87.8, 0.5, 0.7, "rice flour"],
+        ["farina di segale, integrale", 335, 8.2, 75.9, 2, 11.7, "rye flour, whole grain"],
+        ["farina di segale, semi-integrale", 316, 8.3, 67.8, 1.3, 8, "rye flour, semi-whole grain"],
+        ["farina di soia, a basso contenuto lipidico", 352, 45.3, 28.2, 7.2, 13.3, "soy flour, low fat"],
+        ["farina di soia, intera", 447, 36.8, 23.5, 23.5, 10.7, "soy flour, full fat"],
+        ["farina lattea", 415, 13.2, 81.5, 6.3, 0, "farina lattea (milk-based infant cereal flour)"],
+        ["farro", 344, 13.1, 69.2, 1.7, 4.4, "spelt"],
+        ["fave", 37, 5.4, 4.2, 0.2, 5.1, "broad beans (fava beans)"],
+        ["fave secche", 342, 27.2, 55.3, 3, 7, "broad beans (fava beans), dried"],
+        ["feta", 250, 15.6, 1.5, 20.2, 0, "feta"],
+        ["fette biscottate", 410, 11.3, 83, 6, 3.5, "fette biscottate (rusks)"],
+        ["fette biscottate, dolci", 404, 10.5, 81.6, 6.2, 3.5, "fette biscottate (rusks), sweet"],
+        ["fette biscottate, integrali", 365, 11.2, 74.1, 5.2, 11, "fette biscottate (rusks), whole wheat"],
+        ["fette biscottate, vitaminizzate", 410, 11.3, 83, 6, 3.5, "fette biscottate (rusks), vitamin-fortified"],
+        ["fette di segale integrali", 366, 7.9, 65.7, 1.3, 16.5, "whole rye crispbread"],
+        ["fichi", 47, 0.9, 11.2, 0.2, 2, "figs"],
+        ["fichi d'india", 53, 0.8, 13, 0.1, 5, "prickly pears"],
+        ["fichi seccati al forno e mandorlati", 277, 5.2, 58.2, 4.2, 10.4, "figs, oven-dried with almonds"],
+        ["fichi seccati al sole", 232, 3.6, 52.9, 2.1, 18.5, "figs, sun-dried"],
+        ["fichi secchi", 242, 3.5, 58, 2.7, 10.4, "figs, dried"],
+        ["finocchio", 9, 1.2, 1, 0, 2.2, "fennel"],
+        ["finocchio, semi", 345, 15.8, 12.5, 14.9, 39.8, "fennel, seeds"],
+        ["fiocchi d'orzo", 360, 10.6, 80, 1.9, 14.8, "barley flakes"],
+        ["fiocchi di avena", 395, 8, 73.5, 7.5, 8.3, "oat flakes"],
+        ["fiocchi di crusca di grano", 319, 10.2, 69.7, 1.9, 17.3, "wheat bran flakes"],
+        ["fiocchi di latte magro", 102, 11.7, 2.6, 5.3, 0, "cottage cheese, low fat"],
+        ["fiocchi di mais (cornflakes)", 364, 6.6, 88.1, 0.8, 3.8, "corn flakes (cornflakes)"],
+        ["fiocchi di riso", 346, 6.6, 77.5, 1.2, 2.2, "rice flakes"],
+        ["fior di latte", 265, 20.6, 0, 20.3, 0, "fior di latte (fresh mozzarella)"],
+        ["fiori di zucca", 12, 1.7, 0.5, 0.4, 0.5, "zucchini flowers"],
+        ["focaccia", 292, 8.4, 40.7, 11.8, 4.9, "focaccia"],
+        ["foglie di rapa", 22, 2.6, 2.8, 0.1, 2.4, "turnip greens"],
+        ["fontina", 343, 24.5, 0.8, 26.9, 0, "fontina"],
+        ["formaggino", 309, 11.2, 6, 26.9, 0, "formaggino (processed cheese portion)"],
+        ["formaggino, a basso tenore di lipidi", 239, 14.7, 6.5, 17.3, 0, "formaggino (processed cheese portion), low fat"],
+        ["formaggio al gorgonzola e al mascarpone", 406, 13.5, 0.1, 39.1, 0, "gorgonzola and mascarpone cheese"],
+        ["formaggio light Lidl", 214, 31, 1, 10, 0, "light cheese Lidl"],
+        ["formaggio spalmabile", 313, 8.6, 0, 31, 0, "cheese spread"],
+        ["fragole", 27, 0.9, 5.3, 0.4, 1.6, "strawberries"],
+        ["frumento duro", 314, 13, 63, 2.9, 12.6, "durum wheat"],
+        ["frumento tenero", 319, 12.3, 65.8, 2.6, 1.7, "common wheat"],
+        ["fruttosio", 400, 0, 100, 0, 0, "fructose"],
+        ["funghi chiodini", 15, 2.1, 0.1, 0.7, 6.8, "honey fungus mushrooms (chiodini)"],
+        ["funghi gallinacci", 11, 1.6, 0.2, 0.5, 4.7, "chanterelle mushrooms"],
+        ["funghi gallinacci, secchi", 93, 16.5, 1.8, 2.2, 60.5, "chanterelle mushrooms, dried"],
+        ["funghi in scatola", 27, 3, 3, 0.4, 2.4, "mushrooms, canned"],
+        ["funghi ovuli", 18, 2, 1.9, 0.3, 1.7, "Caesar's mushrooms (ovuli)"],
+        ["funghi porcinelli", 24, 3.1, 1.6, 0.6, 6.5, "porcinelli mushrooms"],
+        ["funghi porcini", 27, 3.9, 1.4, 0.7, 2.5, "porcini mushrooms"],
+        ["funghi prataioli, coltivati", 20, 2.3, 1.9, 0.4, 1.7, "button mushrooms, cultivated"],
+        ["funghi secchi", 147, 40.6, 15.6, 4.6, 10, "mushrooms, dried"],
+        ["funghi shiitake, secchi", 296, 16.3, 63.9, 1, 11.5, "shiitake mushrooms, dried"],
+        ["funghi sott'olio", 48, 3.3, 0, 3.9, 1.6, "mushrooms, in oil"],
+        ["funghi spugnoli", 17, 1.7, 1.9, 0.3, 7, "morel mushrooms"],
+        ["gallette di riso", 381, 6.4, 88.6, 0.4, 0, "rice cakes"],
+        ["gallina", 195, 20.9, 0.2, 12.3, 0, "hen"],
+        ["gamberetti di lago", 105, 17.1, 0, 4.1, 0, "freshwater shrimp"],
+        ["gamberetti surgelati", 63, 13.6, 0, 1, 0, "shrimp, frozen"],
+        ["gambero", 71, 13.6, 2.9, 0.6, 0, "shrimp"],
+        ["gelatina alimentare, secca", 354, 88.3, 0, 0.1, 0, "gelatin, dried"],
+        ["gelato al cioccolato", 216, 3.8, 27, 11, 1.2, "chocolate ice cream"],
+        ["gelato alla frutta", 179, 3.5, 24.7, 8, 0, "fruit ice cream"],
+        ["gelato fior di latte", 218, 4.2, 20.7, 13.7, 0, "fior di latte ice cream (milk ice cream)"],
+        ["germe di grano", 416, 28, 55, 10, 15.6, "wheat germ"],
+        ["germogli di erba medica", 24, 4, 0.4, 0.7, 1.7, "alfalfa sprouts"],
+        ["germogli di soia", 49, 6.2, 3, 1.4, 0, "soybean sprouts"],
+        ["ghiacciolo all'arancio", 137, 0, 36.5, 0, 0, "orange ice pop"],
+        ["giardiniera sott'aceto", 7, 0.4, 0.6, 0.3, 1.8, "giardiniera in vinegar (pickled mixed vegetables)"],
+        ["giardiniera sott'olio", 58, 2.6, 1.3, 4.8, 2.5, "giardiniera in oil (mixed vegetables in oil)"],
+        ["girasole, semi", 581, 19.8, 18.6, 47.5, 6.2, "sunflower seeds"],
+        ["gnocchi di patate", 160, 5, 34, 0, 0, "potato gnocchi"],
+        ["gomme da masticare", 341, 0, 96.7, 0.3, 0, "chewing gum"],
+        ["gorgonzola", 359, 19.4, 0.1, 31.2, 0, "gorgonzola"],
+        ["gorgonzola con le noci", 371, 19.3, 0.4, 32.5, 0.3, "gorgonzola with walnuts"],
+        ["gouda fresco", 344, 23, 0, 28, 0, "gouda, fresh"],
+        ["gouda stagionato", 361, 25, 0, 29, 0, "gouda, aged"],
+        ["grana", 381, 35.5, 3.7, 25, 0, "grana (hard cheese)"],
+        ["granchio", 87, 18.1, 0, 1.1, 0, "crab"],
+        ["granchio, polpa in scatola", 77, 18.1, 0, 0.5, 0, "crab, canned meat"],
+        ["granita di limone", 106, 0, 28.4, 0, 0, "lemon granita"],
+        ["granito di tenero", 354, 9.2, 82.3, 1, 2.5, "granito di tenero (soft wheat grain)"],
+        ["grappa", 235, 0, 0, 0, 0, "grappa"],
+        ["grissini", 433, 12.3, 69, 13.9, 3.5, "grissini (breadsticks)"],
+        ["grissini integrali", 443, 8.8, 58.1, 17.2, 10.5, "grissini (breadsticks), whole wheat"],
+        ["groviera", 388, 30.6, 1.5, 29, 0, "gruyere"],
+        ["halibut", 110, 20.8, 0, 2.3, 0, "halibut"],
+        ["hamburger", 240, 12.7, 36.1, 7.6, 1.7, "hamburger"],
+        ["hamburger vegetali (80 gr)", 186, 13.2, 14.6, 8.3, 0, "vegetable burgers (80 g)"],
+        ["indivia", 16, 0.9, 2.7, 0.3, 1.6, "endive"],
+        ["insalata di riso", 187, 5.9, 16.1, 11.5, 1.3, "rice salad"],
+        ["involtini di chioggia", 149.4, 12.1, 6.3, 8.6, 0.7, "involtini di Chioggia (stuffed rolls, Chioggia style)"],
+        ["irish moss, fresca", 8, 1.5, 0, 0.2, 12.3, "Irish moss, fresh"],
+        ["italico (tipo bel paese)", 374, 25.4, 0.1, 30.2, 0, "italico (Bel Paese type cheese)"],
+        ["kaki o loti", 65, 0.6, 16, 0.3, 2.5, "persimmon (kaki or loto)"],
+        ["ketchup", 120, 2, 27, 0.4, 0, "ketchup"],
+        ["kiwi", 44, 1.2, 9, 0.6, 2.6, "kiwi"],
+        ["kombu, secca", 43, 7.1, 0, 1.6, 58.7, "kombu, dried"],
+        ["lamponi", 34, 1, 6.5, 0.6, 7.4, "raspberries"],
+        ["lardo", 891, 0, 0, 99, 0, "lardo (cured pork fat)"],
+        ["lasagne vegetariane", 102.960288808664, 5.27075812274368, 14.6624548736462, 2.97833935018051, 1.42356241234222, "vegetarian lasagna"],
+        ["latte condensato zuccherato", 342, 8.7, 56.5, 9, 0, "sweetened condensed milk"],
+        ["latte di bufala", 102, 4.4, 5.1, 7.3, 0, "buffalo milk"],
+        ["latte di capra", 72, 3.9, 4.7, 4.3, 0, "goat milk"],
+        ["latte di mandorle", 25, 0.6, 2.4, 1.5, 0.4, "almond milk"],
+        ["latte di pecora", 103, 5.3, 5.2, 6.9, 0, "sheep milk"],
+        ["latte di soia", 44, 3.6, 3.1, 1.8, 0.2, "soy milk"],
+        ["latte di vacca, condensato, con zucchero", 327, 8.7, 56.5, 9, 0, "cow milk, condensed, with sugar"],
+        ["latte di vacca, intero", 61, 3.1, 4.8, 3.4, 0, "cow milk, whole"],
+        ["latte di vacca, intero uht", 61, 3.2, 4.7, 3.4, 0, "cow milk, whole, UHT"],
+        ["latte di vacca, intero vitaminizzato", 58, 3.1, 5, 3, 0, "cow milk, whole, vitamin-fortified"],
+        ["latte di vacca, intero, in polvere", 484, 25.7, 42, 24.9, 0, "cow milk, whole, powdered"],
+        ["latte di vacca, parzialmente scremato", 49, 3.5, 5, 1.8, 0, "cow milk, semi-skimmed"],
+        ["latte di vacca, parzialmente scremato uht", 49, 3.6, 4.9, 1.8, 0, "cow milk, semi-skimmed, UHT"],
+        ["latte di vacca, parzialmente scremato vitaminizzato", 45, 3.1, 5, 1.5, 0, "cow milk, semi-skimmed, vitamin-fortified"],
+        ["latte di vacca, parzialmente scremato, in polvere", 418, 28.8, 50.2, 12.7, 0, "cow milk, semi-skimmed, powdered"],
+        ["latte di vacca, scremato", 36, 3.6, 5.3, 0.2, 0, "cow milk, skimmed"],
+        ["latte di vacca, scremato in polvere", 351, 33.1, 56.2, 0.9, 0, "cow milk, skimmed, powdered"],
+        ["latte di vacca, scremato uht", 36, 3.7, 5.2, 0.2, 0, "cow milk, skimmed, UHT"],
+        ["latte evaporato", 151, 8.4, 8.5, 9.4, 0, "evaporated milk"],
+        ["latteria", 450, 30.7, 0, 36.4, 0, "latteria (dairy-style semi-hard cheese)"],
+        ["latterini", 145, 14.6, 0, 9.6, 0, "sand smelt (latterini)"],
+        ["lattuga", 19, 1.8, 2.2, 0.4, 1.5, "lettuce"],
+        ["lattuga a cappuccio", 19, 1.5, 3, 0.2, 1.3, "iceberg lettuce"],
+        ["lattuga da taglio", 14, 1.1, 2.2, 0.1, 1.9, "loose-leaf lettuce"],
+        ["lenticchie in scatola", 61, 5, 10.7, 0.4, 5.3, "lentils, canned"],
+        ["lenticchie, secche", 325, 25, 54, 2.5, 13.7, "lentils, dried"],
+        ["lepre, coscio", 121, 22.8, 0, 3.2, 0, "hare, leg"],
+        ["lievito di birra, compresso", 56, 12.1, 1.1, 0.4, 6.9, "brewer's yeast, compressed"],
+        ["limette", 38, 0.7, 8.8, 0.3, 3.3, "limes"],
+        ["limone", 11, 0.6, 2.3, 0, 5.2, "lemon"],
+        ["limone, scorza", 69, 1.5, 16, 0.3, 4.7, "lemon, zest"],
+        ["lingua di bovino", 232, 17.1, 0.4, 18, 0, "beef tongue"],
+        ["lino, semi", 373, 24.5, 0, 31, 34.8, "flax seeds"],
+        ["liquirizia dolce", 349, 3.7, 76.7, 5.2, 2, "sweet licorice"],
+        ["liquori da dessert (tra 31 e 35 %vol)", 313, 0, 31, 0, 0, "dessert liqueurs (31 to 35 %vol)"],
+        ["luccio", 80, 18.7, 0, 0.6, 0, "pike"],
+        ["lumaca", 98, 12.9, 7.8, 1.7, 0, "snail"],
+        ["lumache di mare", 137, 23.8, 7.8, 0.4, 0, "sea snails"],
+        ["lupini deamarizzati", 114, 16.4, 7.2, 2.4, 4.8, "lupini beans, debittered"],
+        ["macedonia di frutta in scatola", 57, 0.4, 14.8, 0, 1, "fruit cocktail, canned"],
+        ["maggiorana, secca", 271, 12.7, 42.5, 7, 18.1, "marjoram, dried"],
+        ["maiale, bistecca", 100, 18.3, 0, 3, 0, "pork, steak"],
+        ["maiale, carne magra", 141, 19.9, 0, 6.8, 0, "pork, lean meat"],
+        ["maiale, coscia", 102, 18.7, 0, 3, 0, "pork, leg"],
+        ["maionese", 655, 4.2, 2.2, 70, 0, "mayonnaise"],
+        ["mais", 355, 9.2, 75.8, 3.8, 2.9, "corn"],
+        ["mais dolce in scatola", 122, 2.9, 26.6, 1.2, 3.9, "sweet corn, canned"],
+        ["mais dolce, crudo", 93, 3.4, 17, 1.8, 3.3, "sweet corn, raw"],
+        ["mandaranci e clementine", 53, 0.8, 12.8, 0.2, 2.2, "mandarin-orange hybrids (mandaranci) and clementines"],
+        ["mandarini", 72, 0.9, 17.6, 0.3, 1.7, "mandarins"],
+        ["mandorle dolci", 542, 16, 4, 51.5, 14.3, "almonds, sweet"],
+        ["mango", 57, 0.7, 14.1, 0.2, 2.9, "mango"],
+        ["manzo, carne grassa", 324, 15.8, 0, 29, 0, "beef, fatty meat"],
+        ["manzo, carne magra", 160, 19.1, 0, 9.3, 0, "beef, lean meat"],
+        ["manzo, carne semigrassa", 210, 18.8, 0, 15, 0, "beef, medium-fat meat"],
+        ["manzo, tagli di carne grassa", 155, 20.2, 0, 8.3, 0, "beef, fatty cuts"],
+        ["manzo, tagli di carne magra", 108, 21.3, 0, 2.8, 0, "beef, lean cuts"],
+        ["manzo, tagli di carne semigrassa", 140, 21.5, 0, 6.1, 0, "beef, semi-fatty cuts"],
+        ["margarina", 760, 0.6, 0.4, 84, 0, "margarine"],
+        ["margarina vegetale", 746, 0, 0.2, 82.8, 0, "vegetable margarine"],
+        ["marmellata (fichi,mele cot.,pesche)", 209, 0.6, 55.2, 0, 2.2, "jam (figs, cooked apples, peaches)"],
+        ["marmellata (amarene,ciliege,uva,marasche)", 236, 0.6, 62.3, 0, 2.4, "jam (sour cherries, cherries, grapes, morello cherries)"],
+        ["marmellata (normali e tipo frutta viva)", 222, 0.5, 58.7, 0, 2.2, "jam (regular and fruit spread type)"],
+        ["marmellata a ridotto tenore di zucchero", 123, 0.5, 31.9, 0.1, 0.8, "reduced-sugar jam"],
+        ["marmellata di albicocche", 242, 0.7, 63.2, 0.2, 1.2, "apricot jam"],
+        ["marmellata di arance", 261, 0.1, 69.5, 0, 0.7, "orange marmalade"],
+        ["marmellata di prugne", 134, 2.1, 31.2, 0.6, 2.6, "plum jam"],
+        ["marsala all'uovo", 150, 0, 12.4, 0, 0, "marsala, egg (marsala all'uovo)"],
+        ["marsala tipico", 205, 0.1, 28, 0, 0, "marsala, traditional"],
+        ["mascarpone", 453, 7.6, 0, 47, 0, "mascarpone"],
+        ["mela", 45, 0.2, 11, 0.3, 2, "apple"],
+        ["mela cotogna", 34, 0.3, 6.3, 1, 5.9, "quince"],
+        ["mela, polpa secca", 243, 0.9, 57.2, 0.3, 8.7, "apple, dried flesh"],
+        ["melagrane", 63, 0.5, 15.9, 0.2, 2.2, "pomegranates"],
+        ["melanzane", 15, 1.1, 2.6, 0.1, 2.6, "eggplant"],
+        ["melanzane sott'olio", 49, 1.1, 2.5, 4, 2.5, "eggplant in oil"],
+        ["melone d'estate", 33, 0.8, 7.4, 0.2, 0.9, "cantaloupe, summer"],
+        ["melone d'inverno", 22, 0.5, 4.9, 0.2, 0.7, "winter melon"],
+        ["melù o pesce molo", 72, 17.4, 0, 0.3, 0, "whiting or poutassou (melu)"],
+        ["menta, fresca", 43, 3.8, 5.3, 0.7, 5.6, "mint, fresh"],
+        ["menta, secca", 279, 24.8, 34.6, 4.6, 44.7, "mint, dried"],
+        ["merendine al cioccolato", 352, 6.5, 60, 9.5, 2.8, "chocolate snack cakes"],
+        ["merendine con marmellata", 359, 5.5, 69.8, 8.3, 1, "jam-filled snack cakes"],
+        ["merendine farcite", 414, 6.2, 67.6, 15.1, 1, "filled snack cakes"],
+        ["merendine tipo pan di spagna", 463, 8.3, 60.9, 22.3, 2.5, "sponge cake-type snack cakes"],
+        ["meringa", 379, 5.3, 95.4, 0, 0, "meringue"],
+        ["merluzzo", 71, 17, 0, 0.3, 0, "cod"],
+        ["merluzzo surgelato", 75, 17.3, 0, 0.6, 0, "cod, frozen"],
+        ["miele", 303, 0.6, 80.3, 0, 0, "honey"],
+        ["minestrone di verdure", 56, 2.6, 10.4, 0.4, 0, "vegetable minestrone"],
+        ["minestrone toscano con farro", 355, 19.3, 60.3, 4.2, 7.7, "Tuscan minestrone with spelt"],
+        ["mirtillo nero", 30, 0.6, 6.9, 0.2, 2.5, "blueberry"],
+        ["miso", 203, 13.3, 23.5, 6.2, 5.4, "miso"],
+        ["montasio", 411, 30.3, 0, 32.2, 0, "montasio cheese"],
+        ["mora di gelso", 36, 1.3, 8.1, 0, 1.7, "mulberry"],
+        ["mora di rovo", 26, 1.3, 5.7, 0, 7.3, "blackberry"],
+        ["mortadella di suino", 317, 14.7, 1.5, 28.1, 0, "mortadella, pork"],
+        ["mortadella di suino e bovino", 388, 13.3, 0.5, 37, 0, "mortadella, pork and beef"],
+        ["mozzarella", 243, 19.9, 4.9, 16.1, 0, "mozzarella"],
+        ["mozzarella di bufala", 240, 15.7, 3.3, 18.3, 0, "buffalo mozzarella"],
+        ["muesli", 364, 10.6, 71.1, 5.9, 8.1, "muesli"],
+        ["natto", 212, 17.7, 9, 11, 5.4, "natto"],
+        ["nespole", 28, 0.4, 6.1, 0.4, 2.1, "medlars"],
+        ["nocciole", 625, 13, 1.8, 62.9, 6.7, "hazelnuts"],
+        ["noce di cocco", 351, 3.2, 3.7, 36, 12.2, "coconut (noce di cocco)"],
+        ["noce moscata", 395, 8.8, 26.3, 29, 23.7, "nutmeg"],
+        ["noci, fresche", 582, 10.5, 5.5, 57.7, 5.2, "walnuts, fresh"],
+        ["noci, secche", 660, 15.8, 6.3, 63.7, 6.2, "walnuts, dried"],
+        ["nori, secca", 136, 30.7, 0, 1.5, 44.4, "nori, dried"],
+        ["oca", 373, 15.8, 0, 34.4, 0, "goose"],
+        ["olio di cocco", 899, 0, 0, 99.9, 0, "coconut oil"],
+        ["olio di colza", 899, 0, 0, 99.9, 0, "rapeseed oil"],
+        ["olio di germe di grano", 899, 0, 0, 99.9, 0, "wheat germ oil"],
+        ["olio di mais vitaminizzato", 899, 0, 0, 99.9, 0, "corn oil, vitamin-enriched"],
+        ["olio di oliva", 900, 0, 0, 100, 0, "olive oil"],
+        ["olio di oliva extravergine", 900, 0, 0, 100, 0, "olive oil, extra virgin"],
+        ["olio di oliva vitaminizzato", 900, 0, 0, 100, 0, "olive oil, vitamin-enriched"],
+        ["olio di palma", 899, 0, 0, 99.9, 0, "palm oil"],
+        ["olio di semi di arachidi", 900, 0, 0, 100, 0, "peanut oil"],
+        ["olio di semi di girasole", 899, 0, 0, 99.9, 0, "sunflower oil"],
+        ["olio di semi di mais", 899, 0, 0, 99.9, 0, "corn oil"],
+        ["olio di semi vari", 900, 0, 0, 100, 0, "mixed seed oil"],
+        ["olio di sesamo", 898, 0.2, 0, 99.7, 0, "sesame oil"],
+        ["olio di soia", 899, 0, 0, 99.9, 0, "soybean oil"],
+        ["olio di vinacciolo", 899, 0, 0, 99.9, 0, "grape seed oil"],
+        ["olive da tavola, conservate", 268, 1.5, 5, 27, 2.4, "table olives, preserved"],
+        ["olive nere", 234, 1.6, 0.8, 25.1, 2.4, "black olives"],
+        ["olive verdi", 142, 0.8, 1, 15, 4.4, "green olives"],
+        ["olive verdi in salamoia", 29, 1.2, 0.6, 2.5, 0, "green olives in brine"],
+        ["ombrina surgelata", 78, 17.2, 0.8, 0.7, 0, "meagre, frozen"],
+        ["orata, surgelata", 90, 19.8, 0, 1.2, 0, "gilthead sea bream, frozen"],
+        ["orecchiette alle cime di rapa (porz. 470)", 105.468085106383, 5.46382978723404, 19.8595744680851, 1.02340425531915, 1.66431309259633, "orecchiette with turnip tops (470 g serving)"],
+        ["origano, fresco", 66, 2.2, 9.7, 2, 8.4, "oregano, fresh"],
+        ["origano, secco macinato", 306, 11, 49.5, 10.3, 42.8, "oregano, dried ground"],
+        ["ortica", 36, 5.9, 1.3, 0.7, 4.1, "nettle"],
+        ["orzo solubile o caffè d'orzo, in polvere", 372, 5.5, 80.9, 3.4, 0.1, "instant barley or barley coffee, powder"],
+        ["orzo solubile o caffè d'orzo, in tazza", 5, 0.1, 1, 0, 0, "instant barley or barley coffee, brewed"],
+        ["orzo, perlato", 318, 10.4, 70.5, 1.4, 9.1, "barley, pearled"],
+        ["ostrica", 69, 10.2, 5.4, 0.9, 0, "oyster"],
+        ["ovino, cuore", 134, 16.9, 0.4, 7.2, 0, "mutton, heart"],
+        ["ovino, fegato", 135, 19.5, 2, 5.5, 0, "mutton, liver"],
+        ["palombo", 80, 16, 1.3, 1.2, 0, "smooth-hound shark (palombo)"],
+        ["pan di spagna", 314, 8.5, 59.4, 6.4, 1.2, "sponge cake (pan di spagna)"],
+        ["pancarré americano comune", 267, 8.2, 46.9, 3.6, 2.3, "American sandwich bread, regular"],
+        ["pancetta affumicata o bacon", 276, 15.8, 0, 23.6, 0, "smoked bacon"],
+        ["pancetta coppata", 394, 20.9, 0.7, 34.2, 0, "pancetta coppata (cured pork belly and neck roll)"],
+        ["pancetta di maiale", 661, 8.4, 1, 69.3, 0, "pork belly (pancetta)"],
+        ["pancetta magretta", 314, 21.7, 0, 25.3, 0, "lean pancetta (pancetta magretta)"],
+        ["pancetta tesa", 337, 20.9, 0, 28.1, 0, "pancetta tesa (flat unrolled pancetta)"],
+        ["pane al latte", 347, 8.6, 64.9, 7.6, 3.1, "milk bread"],
+        ["pane alle olive", 286, 7, 52.6, 6.7, 3.8, "olive bread"],
+        ["pane comune, pezzatura da 250g", 279, 8.1, 64.7, 0.2, 2.8, "regular bread, 250 g loaf"],
+        ["pane condito", 284, 13.3, 56.9, 3.4, 7.3, "seasoned bread"],
+        ["pane di grano duro", 245, 10.1, 49.1, 2.3, 9.8, "durum wheat bread"],
+        ["pane di grano e segale", 226, 6.2, 47.7, 1.1, 4.6, "wheat and rye bread"],
+        ["pane di segale", 219, 8.3, 45.8, 1.7, 5.8, "rye bread"],
+        ["pane di segale biscottato", 284, 9.4, 46.7, 3.6, 6.4, "rye rusks"],
+        ["pane di soia", 276, 12, 41.7, 6.8, 4.5, "soy bread"],
+        ["pane grattugiato", 354, 11.6, 77.5, 1.9, 3.4, "breadcrumbs"],
+        ["pane integrale", 243, 7.5, 53.8, 1.3, 5.7, "whole wheat bread"],
+        ["pane tostato", 298, 8.8, 69.2, 0.5, 4.1, "toasted bread"],
+        ["pane, tipo 0, pezzatura da 100g", 276, 8.1, 64, 0.5, 3.8, "bread, type 0, 100 g roll"],
+        ["pane, tipo 00, pezzatura da 50g", 290, 8.2, 67.5, 0.4, 3, "bread, type 00, 50 g roll"],
+        ["pane, tipo 1, pezzatura > 500g", 267, 8.9, 60.3, 0.6, 3.8, "bread, type 1, loaf > 500 g"],
+        ["panettone", 334, 6.4, 56.5, 10.7, 2.8, "panettone"],
+        ["panini all'olio", 302, 7.7, 58.3, 5.8, 3.7, "olive oil rolls"],
+        ["panna, 20% di lipidi (da cucina)", 206, 2.8, 3.9, 20, 0, "cream, 20% fat (cooking cream)"],
+        ["panna, 30% di lipidi", 292, 2.6, 3.2, 30, 0, "cream, 30% fat"],
+        ["panna, 35% di lipidi", 337, 2.3, 3.4, 35, 0, "cream, 35% fat"],
+        ["panna, a basso contenuto di colesterolo", 206, 2.8, 3.9, 20, 0, "cream, low cholesterol"],
+        ["papaya", 36, 0.5, 8.8, 0.1, 2.3, "papaya"],
+        ["paprika, in polvere", 306, 14.8, 34.8, 13, 20.9, "paprika, powder"],
+        ["parmigiano", 374, 36, 0, 25.6, 0, "parmesan cheese"],
+        ["pasta all'uovo, fresca", 309, 11.8, 63.2, 2.8, 2.9, "egg pasta, fresh"],
+        ["pasta all'uovo, secca", 368, 13, 78.6, 2.4, 3.2, "egg pasta, dried"],
+        ["pasta con il pomodoro", 206.6, 6.4, 31.2, 7.1, 0.7, "pasta with tomato sauce"],
+        ["pasta di acciughe", 194, 21.5, 0, 12, 0, "anchovy paste (pasta di acciughe)"],
+        ["pasta di mandorle", 467, 8, 54.3, 25.8, 7.2, "almond paste"],
+        ["pasta di olive", 331, 1.4, 4.5, 34.3, 2.2, "olive paste"],
+        ["pasta di semola", 356, 10.8, 82.8, 0.3, 2.6, "semolina pasta"],
+        ["pasta di semola integrale", 324, 13.4, 66.2, 2.5, 11.5, "whole wheat semolina pasta"],
+        ["pasta frolla", 480, 7.7, 61.3, 24.3, 1.7, "shortcrust pastry"],
+        ["pasta sfoglia", 560, 5.6, 45.9, 40.6, 1.6, "puff pastry"],
+        ["pasti dietetici sostitutivi", 355, 26, 41.5, 9.4, 13.5, "diet meal replacements"],
+        ["pasticcini al cocco", 404, 3.6, 70.4, 12.7, 1.8, "coconut pastries"],
+        ["pastorella", 364, 26.9, 0, 28.5, 0, "pastorella (Italian cheese)"],
+        ["patate", 85, 2.1, 18, 1, 1.6, "potatoes"],
+        ["patate dolci", 87, 1.2, 21.3, 0.3, 2.3, "sweet potatoes"],
+        ["patate novelle", 67, 2, 15.8, 0, 1.4, "new potatoes"],
+        ["patate, fecola", 349, 1.4, 91.5, 0, 0, "potato starch"],
+        ["patate, polvere istantanea", 318, 9.1, 73.2, 0.8, 16.5, "potato, instant powder"],
+        ["patatine in sacchetto", 536, 7, 51.2, 34.6, 4.5, "potato chips, bagged"],
+        ["pecora", 293, 17, 0, 25, 0, "sheep (mutton)"],
+        ["pecorino", 366, 28.5, 0, 28, 0, "pecorino cheese"],
+        ["pecorino da grattugiare", 378, 29.5, 0, 28.9, 0, "pecorino cheese, grated"],
+        ["pecorino romano", 379, 28.3, 0, 29.5, 0, "pecorino romano cheese"],
+        ["pecorino, fresco", 332, 26, 0, 25.4, 0, "pecorino cheese, fresh"],
+        ["pepe nero", 255, 10.9, 38.3, 3.3, 26.5, "black pepper"],
+        ["peperoncini piccanti", 25, 1.8, 3.8, 0.5, 1.9, "hot chili peppers"],
+        ["peperoni dolci", 22, 0.9, 4.2, 0.3, 1.9, "sweet peppers"],
+        ["peperoni gialli", 22, 0.9, 5, 0.3, 0.9, "yellow peppers"],
+        ["peperoni sott'aceto", 15, 0.8, 1.7, 0.6, 1.9, "peppers in vinegar"],
+        ["pera", 41, 0.3, 9.5, 0.4, 2.8, "pear"],
+        ["pesca", 27, 0.8, 6.1, 0.1, 2.1, "peach"],
+        ["pesca sciroppata", 87, 0.4, 22.9, 0, 1, "peaches in syrup"],
+        ["pesce persico", 75, 15.4, 0, 1.5, 0, "perch"],
+        ["pesce spada", 109, 16.9, 1, 4.2, 0, "swordfish"],
+        ["pesoforma biscotti (inserire 100 grammi)", 311, 20.3, 48.1, 4.2, 3.2, "Pesoforma cookies (add 100 grams)"],
+        ["petto di tacchino arrosto", 99, 16.6, 5, 1.4, 1, "turkey breast, roasted"],
+        ["piccione adulto", 187, 18.4, 0.3, 12.5, 0, "pigeon, adult"],
+        ["piccione giovane", 138, 22.1, 0, 5.5, 0, "pigeon, young"],
+        ["pinoli", 567, 29.6, 5, 47.8, 1.9, "pine nuts"],
+        ["piselli in scatola", 53, 5.8, 6.8, 0.8, 9.7, "peas, canned"],
+        ["piselli in scatola sgocciolati", 53, 5.8, 6.8, 0.8, 9.7, "peas, canned, drained"],
+        ["piselli surgelati", 54, 5.7, 7.5, 0.4, 7.8, "peas, frozen"],
+        ["piselli, freschi", 76, 7, 12.4, 0.2, 5.2, "peas, fresh"],
+        ["piselli, secchi", 306, 21.7, 53.6, 2, 15.7, "peas, dried"],
+        ["pistacchi, freschi", 390, 12.8, 16.4, 32.6, 1.5, "pistachios, fresh"],
+        ["pistacchi, secchi", 577, 20.6, 14, 48.4, 10.8, "pistachios, dried"],
+        ["pistacchi, tostati e salati", 601, 17.9, 8.2, 55.4, 6.1, "pistachios, roasted and salted"],
+        ["pizza con pomodoro", 247, 4, 51.9, 4, 3.1, "pizza with tomato"],
+        ["pizza con pomodoro e mozzarella", 271, 5.6, 52.9, 5.6, 3.8, "pizza with tomato and mozzarella"],
+        ["polenta", 183, 4.4, 40.8, 1.4, 1.3, "polenta"],
+        ["polenta pronta ai funghi (busta da 170 gr)", 401, 11.1, 71, 8.1, 0, "ready-made polenta with mushrooms (170 g pouch)"],
+        ["polenta pronta al formaggio (busta da 170 gr)", 414, 11.7, 70, 9.7, 0, "ready-made polenta with cheese (170 g pouch)"],
+        ["polenta soda", 72.5, 2, 15, 0.5, 0, "firm polenta"],
+        ["pollo, ali", 193, 20.3, 0, 12.4, 0, "chicken, wings"],
+        ["pollo, coscia", 130, 17.9, 0, 6.5, 0, "chicken, thigh"],
+        ["pollo, fegatini", 122, 20.5, 0, 4.5, 0, "chicken, livers"],
+        ["pollo, intero", 175, 19.1, 0, 11, 0, "chicken, whole"],
+        ["pollo, petto", 97, 22.2, 0, 0.9, 0, "chicken, breast"],
+        ["pollo, rigaglie", 196, 13.9, 0.1, 15.6, 0, "chicken, giblets"],
+        ["polpettine di cavolfiore", 112.18, 8.222, 11.36, 4.058, 1.64735246924585, "cauliflower patties"],
+        ["polpo", 57, 10.6, 1.4, 1, 0, "octopus"],
+        ["polpo surgelato", 51, 12.4, 0, 0.2, 0, "octopus, frozen"],
+        ["pomodori da insalata", 17, 1.2, 2.8, 0.2, 1.1, "salad tomatoes"],
+        ["pomodori maturi", 19, 1, 3.5, 0.2, 0.9, "ripe tomatoes"],
+        ["pomodori secchi", 258, 14.1, 43.5, 3, 12.3, "tomatoes, dried"],
+        ["pomodori sott'olio", 213, 5.1, 17.5, 14.1, 5.8, "tomatoes in oil"],
+        ["pomodori, pelati, in scatola con liquido", 21, 1.2, 3, 0.5, 0.9, "tomatoes, peeled, canned with liquid"],
+        ["pomodoro, concentrato (sostanza secca 18%)", 50, 0.9, 11.4, 0.4, 2.3, "tomato, concentrate (18% dry matter)"],
+        ["pomodoro, concentrato (sostanza secca 25%)", 71, 4.4, 16.4, 0.6, 2.5, "tomato, concentrate (25% dry matter)"],
+        ["pomodoro, conserva (sostanza secca 30%)", 96, 3.9, 20.4, 0.4, 2, "tomato, paste (30% dry matter)"],
+        ["pompelmo", 26, 0.6, 6.2, 0, 1.6, "grapefruit"],
+        ["pompelmo rosa", 30, 0.6, 7.7, 0.1, 1.6, "pink grapefruit"],
+        ["pop corn", 383, 12.7, 76.7, 5, 2.2, "popcorn"],
+        ["porri", 29, 2.1, 5.2, 0.1, 2.9, "leeks"],
+        ["porto", 157, 0.1, 12, 0, 0, "port"],
+        ["prezzemolo, fresco", 20, 3.7, 0, 0.6, 5.6, "parsley, fresh"],
+        ["prezzemolo, secco", 181, 15.8, 14.5, 7, 44.7, "parsley, dried"],
+        ["primosale", 254, 14.2, 2, 21, 0, "primosale (fresh Italian cheese)"],
+        ["prosciutto cotto", 215, 19.8, 0.9, 14.7, 0, "ham, cooked"],
+        ["prosciutto cotto, affumicato", 215, 19.8, 0.9, 14.7, 0, "ham, cooked, smoked"],
+        ["prosciutto cotto, magro", 132, 22.2, 1, 4.4, 0, "ham, cooked, lean"],
+        ["prosciutto crudo", 370, 22.2, 0, 31.2, 0, "ham, cured (prosciutto crudo)"],
+        ["prosciutto crudo, affumicato", 218, 28.6, 0, 11.5, 0, "ham, cured, smoked"],
+        ["prosciutto crudo, magro", 218, 28.6, 0, 11.5, 0, "ham, cured, lean"],
+        ["proteine in polvere", 360, 90, 0, 0, 0, "protein powder"],
+        ["proteine in polvere super", 392, 98, 0, 0, 0, "protein powder, super"],
+        ["provola affumicata", 260, 21.2, 0, 19.6, 0, "smoked provola cheese"],
+        ["provoloncino dolce", 348, 25, 2.1, 26.6, 0, "provoloncino, mild (small provolone)"],
+        ["provolone", 374, 26.3, 2.1, 28.9, 0, "provolone cheese"],
+        ["provolone piccante", 400, 29.4, 2.1, 30.4, 0, "provolone cheese, sharp"],
+        ["prugne", 42, 0.5, 10.5, 0.1, 1.4, "plums"],
+        ["prugne regina claudia", 41, 0.8, 9.7, 0.1, 2.3, "greengage plums"],
+        ["prugne, secche", 220, 2.2, 55, 0.5, 9, "plums, dried (prunes)"],
+        ["purè in fiocchi", 334, 7.5, 75, 0.5, 0, "mashed potato flakes"],
+        ["quaglia", 161, 25, 0, 6.8, 0, "quail"],
+        ["radicchio rosso", 13, 1.4, 1.6, 0.1, 3, "red radicchio"],
+        ["radicchio verde", 14, 1.9, 0.5, 0.5, 1, "green radicchio"],
+        ["rana", 64, 15.5, 0, 0.2, 0, "frog"],
+        ["rana pescatrice", 63, 12.8, 0.6, 1, 0, "monkfish"],
+        ["rape", 18, 1, 3.8, 0, 2.6, "turnips"],
+        ["ravanelli", 11, 0.8, 1.8, 0.1, 1.3, "radishes"],
+        ["razza", 68, 14.2, 0.7, 0.9, 0, "skate"],
+        ["rhum", 222, 0, 0, 0, 0, "rum"],
+        ["ribes nero", 28, 0.9, 6.6, 0, 7.8, "blackcurrant"],
+        ["ribes rosso", 21, 1.1, 4.4, 0, 7.4, "redcurrant"],
+        ["ricotta di pecora", 271, 8.4, 3.2, 25.1, 0, "ricotta, sheep's milk"],
+        ["ricotta di vacca", 136, 12.2, 4, 8, 0, "ricotta, cow's milk"],
+        ["ricotta di vacca e pecora", 204, 10.3, 3.6, 16.6, 0, "ricotta, cow's and sheep's milk"],
+        ["ricotta intera, tipo tedesco", 109, 12.5, 3.6, 5.1, 0, "ricotta, whole milk, German type"],
+        ["ricotta magra tipo tedesco", 72, 13.5, 4.1, 0.2, 0, "ricotta, low-fat, German type"],
+        ["riso soffiato", 369, 6.1, 89.7, 0.9, 1.1, "puffed rice"],
+        ["riso, brillato", 362, 7, 87.6, 0.6, 1.4, "rice, polished"],
+        ["riso, sbramato (integrale)", 357, 6.7, 81.3, 2.8, 3.8, "rice, brown (whole grain)"],
+        ["riso, tipo parboiled", 364, 6.7, 79.3, 1, 2.2, "rice, parboiled"],
+        ["risotto ai fiori di zucca (porz. 160 g)", 238.584615384615, 4.16923076923077, 47.9630769230769, 3.47384615384615, 0.404952282692804, "squash blossom risotto (serving 160 g)"],
+        ["robiola", 309, 18.9, 0, 25.9, 0, "robiola cheese"],
+        ["rombo", 81, 16.3, 1.2, 1.3, 0, "turbot"],
+        ["roquefort", 375, 19.7, 0, 32.9, 0, "roquefort cheese"],
+        ["rosmarino, fresco", 96, 1.4, 13.5, 4.4, 7.7, "rosemary, fresh"],
+        ["rosmarino, secco", 331, 4.9, 46.4, 15.2, 17.7, "rosemary, dried"],
+        ["rucola", 25, 2.6, 2.1, 0.7, 1.6, "rocket (arugula)"],
+        ["salame cacciatore", 424, 28.5, 1.2, 34, 0, "salame cacciatore (hunter's salami)"],
+        ["salame da cuocere", 326, 36, 1.5, 19.6, 0, "cooking salami"],
+        ["salame di suino", 475, 22.5, 0, 42.8, 0, "salami, pork"],
+        ["salame di suino e bovino", 454, 27.4, 0, 38.3, 0, "salami, pork and beef"],
+        ["salame fabriano", 421, 26.5, 1.5, 34.3, 0, "salame Fabriano"],
+        ["salame felino", 375, 30.5, 0.5, 27.9, 0, "salame Felino"],
+        ["salame milano", 390, 26.7, 1.5, 30.9, 0, "salame Milano"],
+        ["salame napoli", 358, 26.7, 1.7, 27.3, 0, "salame Napoli"],
+        ["salame nostrano", 370, 27.3, 1.1, 28.5, 0, "salame nostrano (local-style salami)"],
+        ["salame ungherese", 406, 24.2, 0.7, 34, 0, "salami, Hungarian"],
+        ["salatini", 514, 7.2, 71.1, 24.3, 3.3, "salatini (salty snack crackers)"],
+        ["sale da cucina", 0, 0, 0, 0, 0, "cooking salt"],
+        ["salmone", 180, 20.2, 0, 11, 0, "salmon"],
+        ["salmone affumicato", 142, 25.4, 0, 4.5, 0, "salmon, smoked"],
+        ["salmone in salamoia", 188, 21.1, 0, 11.5, 0, "salmon, brined"],
+        ["salsiccia di fegato", 424, 12.4, 0.9, 41.2, 0, "liver sausage"],
+        ["salsiccia di suino e bovino, fresca", 394, 14.2, 0, 37.4, 0, "sausage, pork and beef, fresh"],
+        ["salsiccia di suino, fresca", 304, 15.4, 0.6, 26.7, 0, "sausage, pork, fresh"],
+        ["salsiccia di suino, secca", 514, 22, 0, 47.3, 0, "sausage, pork, dried"],
+        ["salvia, fresca", 119, 3.9, 15.6, 4.6, 14.7, "sage, fresh"],
+        ["salvia, secca macinata", 315, 10.6, 42.7, 12.7, 18.1, "sage, dried ground"],
+        ["sarago", 103, 15, 1, 4.4, 0, "sea bream"],
+        ["sarda", 129, 20.8, 1.5, 4.5, 0, "sardine"],
+        ["sardine salate", 133, 25.1, 0, 3.6, 0, "sardines, salted"],
+        ["sardine sott'olio", 198, 22.3, 0, 12.1, 0, "sardines, in oil"],
+        ["scalogno", 20, 1.5, 3.3, 0.2, 1.5, "shallot"],
+        ["scamorza", 209, 22.7, 7.2, 10.1, 0, "scamorza cheese"],
+        ["scamorza affumicata", 209, 22.7, 7.2, 10.1, 0, "scamorza cheese, smoked"],
+        ["scarola", 15, 1.6, 1.7, 0.2, 1.5, "escarole"],
+        ["sciroppo di malto", 318, 6.2, 71.3, 0, 0, "malt syrup"],
+        ["sciroppo per bibite", 297, 0.3, 79, 0, 0, "soft drink syrup"],
+        ["scorzonera", 27, 1.3, 10.2, 0.3, 3.2, "black salsify"],
+        ["sedano", 20, 2.3, 2.4, 0.2, 1.6, "celery"],
+        ["sedano rapa", 23, 1.9, 3.8, 0.1, 5.1, "celeriac"],
+        ["sego di bue", 872, 0.8, 0, 96.5, 0, "beef tallow"],
+        ["semola", 341, 11.5, 77.6, 0.5, 3.6, "semolina"],
+        ["seppia", 72, 14, 0.7, 1.5, 0, "cuttlefish"],
+        ["seppia surgelata", 63, 14.1, 0.7, 0.4, 0, "cuttlefish, frozen"],
+        ["sgombro o maccarello", 168, 17, 0, 11.1, 0, "mackerel"],
+        ["sgombro o maccarello in salamoia", 177, 19.3, 0, 11.1, 0, "mackerel, brined"],
+        ["sgombro, filetti sott'olio", 201, 25.3, 1, 10.7, 0, "mackerel, fillets in oil"],
+        ["shoyu, salsa di soia e grano", 53, 5.2, 7.7, 0.1, 0.8, "shoyu (soy and wheat sauce)"],
+        ["soda dolce", 22, 0, 5.8, 0, 0, "soda, sweetened soft drink"],
+        ["sofficini al formaggio surgelati", 278, 7.2, 28.6, 15.8, 1.4, "sofficini, cheese-filled breaded crepes, frozen"],
+        ["sogliola", 86, 16.9, 0.8, 1.7, 0, "sole"],
+        ["sogliola surgelata", 84, 17.3, 0.8, 1.3, 0, "sole, frozen"],
+        ["soia, bistecca", 329, 47, 20.9, 1.2, 17.5, "soy, steak"],
+        ["soia, fagioli in scatola", 160, 13.9, 8.2, 8, 0, "soybeans, canned"],
+        ["soia, germogli", 49, 6.2, 3, 1.4, 1.1, "soybean sprouts (soia, germogli)"],
+        ["soia, semi", 398, 36.9, 23.3, 18.1, 11.9, "soybeans, dried"],
+        ["sottilette", 330, 20.8, 0.9, 27, 0, "processed cheese slices (sottilette)"],
+        ["speck", 301, 28.3, 0.5, 20.9, 0, "speck"],
+        ["spigola", 82, 16.5, 0.6, 1.5, 0, "sea bass"],
+        ["spinaci", 31, 3.4, 3, 0.7, 1.9, "spinach"],
+        ["spinaci in scatola", 19, 2.8, 0.8, 0.5, 3.1, "spinach, canned"],
+        ["spremuta di arancia", 33, 0.5, 8.2, 0, 0, "orange juice, freshly squeezed"],
+        ["spremuta di pompelmo", 30, 0.3, 7.9, 0, 0, "grapefruit juice, freshly squeezed"],
+        ["spumanti aromatici", 82, 0.2, 5.1, 0, 0, "sparkling wine, aromatic"],
+        ["spumanti demi-sec", 71, 0.1, 2.5, 0, 0, "sparkling wine, demi-sec"],
+        ["spumanti secchi", 65, 0.1, 0.7, 0, 0, "sparkling wine, dry"],
+        ["starna, coscio", 113, 26.4, 0, 2.6, 0, "partridge, leg"],
+        ["stinco cotto al forno", 182, 25.7, 0, 8.8, 0, "pork shank, oven-baked"],
+        ["stoccafisso, ammollato", 92, 20.7, 0.3, 0.9, 0, "stockfish, soaked"],
+        ["stoccafisso, secco", 358, 80.1, 1.1, 3.5, 0, "stockfish, dried"],
+        ["stracchinerie", 231, 8, 2.5, 21, 0, "stracchinerie (soft cheese products)"],
+        ["stracchino", 300, 18.5, 0, 25.1, 0, "stracchino cheese"],
+        ["strutto o sugna", 892, 0.3, 0, 99, 0, "lard"],
+        ["succo di albicocca, conservato", 47, 0.3, 12, 0.1, 0.2, "apricot juice, bottled"],
+        ["succo di ananas, conservato", 56, 0.3, 13.6, 0.1, 0.2, "pineapple juice, bottled"],
+        ["succo di arancia e pompelmo non zuccherato", 43, 0.6, 10.2, 0.1, 0.1, "orange and grapefruit juice, unsweetened"],
+        ["succo di arancia, concentrato", 185, 2.9, 44.9, 0.5, 0, "orange juice, concentrate"],
+        ["succo di arancia, conservato, non zuccherato", 36, 0.5, 8.8, 0.1, 0.1, "orange juice, bottled, unsweetened"],
+        ["succo di barbabietola, fresco", 14, 0.8, 2.9, 0, 1.9, "beetroot juice, fresh"],
+        ["succo di carote, conservato", 24, 0.5, 5.7, 0.1, 0.6, "carrot juice, bottled"],
+        ["succo di frutta, conservato", 56, 0.3, 14.5, 0.1, 0.2, "fruit juice, bottled"],
+        ["succo di limone, conservato", 21, 0.4, 6.1, 0.3, 0.4, "lemon juice, bottled"],
+        ["succo di limone, fresco", 6, 0.2, 1.4, 0, 0, "lemon juice, fresh"],
+        ["succo di mandarino, conservato, non zuccherato", 50, 0.5, 11.8, 0.2, 0.2, "mandarin juice, bottled, unsweetened"],
+        ["succo di mandarino, fresco", 43, 0.5, 9.9, 0.2, 0.2, "mandarin juice, fresh"],
+        ["succo di mela, conservato, non zuccherato", 38, 0.1, 9.9, 0.1, 0, "apple juice, bottled, unsweetened"],
+        ["succo di melagrana, fresco", 44, 0.2, 11.6, 0, 0, "pomegranate juice, fresh"],
+        ["succo di pera, conservato", 60, 0.1, 15.2, 0, 0.6, "pear juice, bottled"],
+        ["succo di pesca, conservato", 54, 0.3, 13.3, 0, 0.6, "peach juice, bottled"],
+        ["succo di pomodoro, conservato", 14, 0.8, 3, 0, 0.6, "tomato juice, bottled"],
+        ["succo di pompelmo, conservato, non zuccherato", 33, 0.4, 8.3, 0.1, 0, "grapefruit juice, bottled, unsweetened"],
+        ["succo di pompelmo, conservato, zuccherato", 46, 0.6, 11, 0.1, 0.1, "grapefruit juice, bottled, sweetened"],
+        ["succo di spinaci", 10, 1.4, 0.5, 0.3, 0.9, "spinach juice"],
+        ["succo di uva, conservato, non zuccherato", 46, 0.3, 11.7, 0.1, 0, "grape juice, bottled, unsweetened"],
+        ["succo tropicale, conservato", 47, 0.2, 11.6, 0.1, 0, "tropical fruit juice, bottled"],
+        ["sugo all'amatriciana pronto", 168, 2.7, 7.7, 14, 0, "amatriciana sauce, ready-made"],
+        ["suino, bistecca", 100, 18.3, 0, 3, 0, "pork, steak (suino, bistecca)"],
+        ["suino, carne magra", 141, 19.9, 0, 6.8, 0, "pork, lean meat (suino, carne magra)"],
+        ["suino, carne semigrassa", 268, 17.2, 0, 22.1, 0, "pork, medium-fat meat"],
+        ["suino, coscio", 102, 18.7, 0, 3, 0, "pork, leg (suino, coscio)"],
+        ["suino, cuore", 159, 18.3, 0.4, 9.4, 0, "pork, heart"],
+        ["suino, fegato", 140, 22.8, 1.5, 4.8, 0, "pork, liver"],
+        ["suino, sangue", 78, 19, 0.1, 0.2, 0, "pork, blood"],
+        ["surimi", 99, 15.2, 6.9, 0.9, 0, "surimi"],
+        ["tacchina, ala", 241, 22.3, 0, 16.9, 0, "turkey (hen), wing"],
+        ["tacchina, coscia", 253, 20.9, 0.4, 18.7, 0, "turkey (hen), thigh"],
+        ["tacchina, petto", 145, 22, 0.4, 6.2, 0, "turkey (hen), breast"],
+        ["tacchino, ala", 193, 22.3, 0, 11.5, 0, "turkey (tom), wing"],
+        ["tacchino, arrosto", 134, 17, 0.5, 7, 0, "turkey, roasted"],
+        ["tacchino, coscia", 186, 20.9, 0.4, 11.2, 0, "turkey (tom), thigh"],
+        ["tacchino, intero", 146, 21, 0.1, 6.8, 0, "turkey, whole"],
+        ["tacchino, petto", 134, 22, 0.4, 4.9, 0, "turkey (tom), breast"],
+        ["taleggio", 306, 20.6, 0, 24.8, 0, "taleggio cheese"],
+        ["tamari, salsa di soia", 60, 10.5, 4.8, 0.1, 0.8, "tamari soy sauce"],
+        ["tapioca", 363, 0.6, 95.8, 0.2, 0.4, "tapioca"],
+        ["tartufo nero", 31, 6, 0.7, 0.5, 8.5, "black truffle"],
+        ["tè deteinato, in foglie", 108, 19.6, 3, 2, 0, "tea, decaffeinated, leaves"],
+        ["tè deteinato, in tazza", 0, 0.1, 0, 0, 0, "tea, decaffeinated, brewed"],
+        ["tè, in foglie", 108, 19.6, 3, 2, 44.7, "tea, leaves"],
+        ["tè, in tazza", 0, 0.1, 0, 0, 0, "tea, brewed"],
+        ["tempeh", 166, 20.7, 6.4, 6.4, 4.1, "tempeh"],
+        ["timo, fresco", 95, 3, 15.1, 2.5, 12.3, "thyme, fresh"],
+        ["timo, secco macinato", 276, 9.1, 45.3, 7.4, 18.6, "thyme, dried ground"],
+        ["tinca", 76, 17.9, 0, 0.5, 0, "tench"],
+        ["tiramisù", 411, 13.2, 33.5, 25.8, 7.5, "tiramisu"],
+        ["tisana in tazza", 1, 0, 0.2, 0, 0, "herbal tea, brewed"],
+        ["tofu", 76, 8.1, 0.7, 4.8, 1.2, "tofu"],
+        ["tonno", 158, 21.5, 0, 8, 0, "tuna"],
+        ["tonno in salamoia, sgocciolato", 103, 25.1, 0, 0.3, 0, "tuna, in brine, drained"],
+        ["tonno sott'olio, sgocciolato", 258, 22.8, 0, 18.5, 0, "tuna, in oil, drained"],
+        ["tordo", 143, 20.1, 0, 7.7, 0, "thrush"],
+        ["torrone con mandorle", 479, 10.8, 52, 26.8, 1.9, "torrone with almonds (nougat)"],
+        ["torta al cioccolato", 315, 4.9, 36.8, 17.5, 3.6, "chocolate cake"],
+        ["torta di carote", 218.111764705882, 5.06882352941177, 42.7076470588235, 4.18058823529412, 1.65214811618436, "carrot cake"],
+        ["torta margherita", 368, 8.9, 63.6, 10.4, 1, "margherita cake (plain sponge cake)"],
+        ["torta salata di verze", 186.09865470852, 6.17399103139014, 13.0165919282511, 12.4834080717489, 2, "savoy cabbage savory pie"],
+        ["tortellini, di magro", 304, 11.25, 48.39, 7.28, 0, "tortellini, meatless (ricotta and spinach filled)"],
+        ["tortellini, freschi", 310, 12.2, 52.6, 7.1, 1.3, "tortellini, fresh"],
+        ["tortellini, secchi", 389, 15.7, 61, 10.8, 2, "tortellini, dried"],
+        ["triglia", 123, 15.8, 1.1, 6.2, 0, "red mullet"],
+        ["trota", 86, 14.7, 0, 3, 0, "trout"],
+        ["uovo di anatra", 190, 12.2, 0.7, 15.4, 0, "duck egg"],
+        ["uovo di gallina, albume", 47, 10.9, 0.8, 0, 0, "hen egg, white"],
+        ["uovo di gallina, intero", 156, 13, 1, 11.1, 0, "hen egg, whole"],
+        ["uovo di gallina, intero, in polvere", 574, 47, 4.1, 41.2, 0, "hen egg, whole, powdered"],
+        ["uovo di gallina, tuorlo", 355, 16.3, 0.7, 31.9, 0, "hen egg, yolk"],
+        ["uovo di oca", 189, 13.8, 1, 14.4, 0, "goose egg"],
+        ["uovo di tacchina", 147, 12.8, 1, 10.2, 0, "turkey egg"],
+        ["uva", 61, 0.5, 15.6, 0.1, 1.5, "grapes"],
+        ["uva sultanina/uvetta, uva secca", 283, 1.9, 72, 0.6, 6.8, "sultanas/raisins, dried grapes"],
+        ["valeriana", 21, 2, 3.6, 0.4, 1.5, "lamb's lettuce (corn salad)"],
+        ["vaniglia, estratto alcolico", 288, 0.1, 12.7, 0.1, 0, "vanilla, alcoholic extract"],
+        ["ventaglio o pettine", 88, 16.8, 2.4, 0.8, 0, "scallop (fan or comb shell)"],
+        ["verdura e legumi, surgelati", 64, 3.3, 9.5, 0.5, 4, "vegetables and legumes, frozen"],
+        ["vermouth dolce", 151, 0, 15.9, 0, 0, "vermouth, sweet"],
+        ["vermouth secco", 109, 0.1, 3, 0, 0, "vermouth, dry"],
+        ["vino bianco", 71, 0.1, 0.1, 0, 0, "white wine"],
+        ["vino rosato", 71, 0.1, 2.5, 0, 0, "rose wine"],
+        ["vino rosso", 76, 0.1, 0.2, 0, 0, "red wine"],
+        ["vitello, carne magra", 92, 20.7, 0.1, 1, 0, "veal, lean meat"],
+        ["vitello, carne semigrassa", 144, 20.3, 0, 7, 0, "veal, medium-fat meat"],
+        ["vitello, coratella", 103, 17.1, 1.6, 3.2, 0, "veal, pluck (offal)"],
+        ["vitellone, carne grassa", 204, 18.1, 0, 14.6, 0, "young beef, fat meat"],
+        ["vitellone, carne magra", 113, 21.3, 0, 3.1, 0, "young beef, lean meat"],
+        ["vitellone, carne semigrassa", 160, 19.1, 0, 9.3, 0, "young beef, medium-fat meat"],
+        ["vitellone, tagli di carne grassa", 155, 20.2, 0, 8.3, 0, "young beef, fatty cuts"],
+        ["vitellone, tagli di carne magra", 108, 21.3, 0, 2.8, 0, "young beef, lean cuts"],
+        ["vitellone, tagli di carne semigrassa", 140, 21.5, 0, 6.1, 0, "young beef, medium-fat cuts"],
+        ["vodka", 222, 0, 0, 0, 0, "vodka"],
+        ["vongola", 72, 10.2, 2.2, 2.5, 0, "clam"],
+        ["vongole in scatola, al naturale", 148, 25.6, 5.1, 2, 0, "clams, canned, in brine"],
+        ["wakame, secca", 71, 12.4, 0, 2.4, 47.1, "wakame, dried"],
+        ["whisky", 238, 0, 0.1, 0, 0, "whisky"],
+        ["würstel", 270, 13.7, 1.4, 23.3, 0, "wurstel (frankfurter)"],
+        ["würstel di pollo", 257, 12.9, 6.8, 19.5, 0, "chicken wurstel (frankfurter)"],
+        ["würstel di tacchino", 226, 14.3, 1.5, 17.7, 0, "turkey wurstel (frankfurter)"],
+        ["yogurt da bere magro con fermenti", 48, 3.3, 8.5, 0.1, 0, "drinking yogurt, low-fat, with live cultures"],
+        ["yogurt di latte intero", 63, 3.5, 3.6, 3.9, 0, "yogurt, whole milk"],
+        ["yogurt di latte intero ai cereali e malto", 95, 3.5, 12.9, 3.6, 0.2, "yogurt, whole milk, with cereals and malt"],
+        ["yogurt di latte intero alla frutta", 88, 2.8, 12.6, 3.3, 0.2, "yogurt, whole milk, with fruit"],
+        ["yogurt di latte magro alla frutta", 90, 4.1, 17.9, 0.7, 0.2, "yogurt, skimmed milk, with fruit"],
+        ["yogurt di latte parzialmente scremato", 43, 3.4, 3.8, 1.7, 0, "yogurt, partially skimmed milk"],
+        ["yogurt di latte scremato", 36, 3.3, 4, 0.9, 0, "yogurt, skimmed milk"],
+        ["yogurt greco", 130, 6.8, 3.2, 10, 0, "Greek yogurt"],
+        ["yogurt greco di capra", 96, 5.6, 4.8, 6, 2, "Greek yogurt, goat's milk"],
+        ["zafferano", 310, 11.4, 61.5, 5.9, 3.9, "saffron"],
+        ["zampone", 360, 19.1, 0, 31.6, 0, "zampone (stuffed pig's trotter)"],
+        ["zucca gialla", 18, 1.1, 3.5, 0.1, 0.5, "pumpkin (yellow squash)"],
+        ["zucchero (saccarosio)", 392, 0, 104.5, 0, 0, "sugar (sucrose)"],
+        ["zucchero di canna, grezzo", 362, 0.1, 101.3, 0, 0, "cane sugar, raw"],
+        ["zucchine", 11, 1.3, 1.4, 0.1, 1.3, "zucchini"]
+      ]
+    </script>
+    <script>
+      "use strict";
+      /* ===== Calculation parameters (and differences from the original workbook) ===== */
+      const CFG = {
+        kcalPerKg: 7000, // kcal per kg of body weight
+        mifflinMaleAge: 5, // original workbook: 5.25 (typo vs. Mifflin-St Jeor, which uses 5)
+        kcalProt: 3.75,
+        kcalCarb: 4,
+        kcalFat: 9, // energy factors for macro percentages (the workbook had protein and carbs swapped)
+        minKcal: 1200
+      };
+      const ACTS = [
+        ["Sleep", .8],
+        ["Very light activity", 1.23],
+        ["Light activity", 2.78],
+        ["Moderate activity", 3.7],
+        ["Intense activity", 4.63],
+        ["Very intense activity", 5.52],
+        ["Vigorous sports", 6.49],
+        ["Extreme training", 7.4],
+        ["Maximal sustained effort", 8.41]
+      ];
+      const SPORTS = [
+        ["Aerobics, low impact", 0.1],
+        ["Aerobics, high impact", 0.13],
+        ["Mountaineering", 0.16],
+        ["Ballroom dancing", 0.053],
+        ["Modern dancing", 0.075],
+        ["Fast dancing (twist, lambada)", 0.17],
+        ["Baseball", 0.06],
+        ["Boxing (training)", 0.15],
+        ["Bowling", 0.1],
+        ["Football/soccer (training)", 0.14],
+        ["Walking at 3 km/h", 0.05],
+        ["Walking at 4 km/h", 0.06],
+        ["Walking at 5 km/h", 0.08],
+        ["Walking at 6 km/h", 0.09],
+        ["Canoeing (recreational)", 0.046],
+        ["Canoeing (competitive)", 0.107],
+        ["Rowing (competitive)", 0.19],
+        ["Cycling at 10 km/h", 0.067],
+        ["Cycling at 15 km/h", 0.105],
+        ["Cycling (competitive)", 0.177],
+        ["Stationary bike at 9 km/h", 0.06],
+        ["Stationary bike at 15 km/h", 0.1],
+        ["Running at 12 km/h", 0.22],
+        ["Running at 8 km/h", 0.14],
+        ["Horse riding (gallop)", 0.14],
+        ["Horse riding (walk)", 0.04],
+        ["Horse riding (trot)", 0.11],
+        ["Golf", 0.09],
+        ["Judo", 0.2],
+        ["Karate", 0.2],
+        ["Kendo", 0.2],
+        ["Race walking", 0.15],
+        ["Motorcycling", 0.14],
+        ["Swimming (backstroke)", 0.17],
+        ["Swimming (breaststroke)", 0.16],
+        ["Swimming (freestyle, slow)", 0.13],
+        ["Swimming (freestyle, fast)", 0.162],
+        ["Swimming (sidestroke)", 0.12],
+        ["Swimming (butterfly)", 0.17],
+        ["Underwater swimming", 0.22],
+        ["Water polo", 0.15],
+        ["Basketball (training)", 0.14],
+        ["Volleyball (training)", 0.11],
+        ["Skating", 0.1],
+        ["Table tennis", 0.07],
+        ["Rowing machine", 0.12],
+        ["Rowing (boat)", 0.1],
+        ["Jump rope, 80 per minute", 0.16],
+        ["Jump rope, 125 per minute", 0.2],
+        ["Fencing (training)", 0.08],
+        ["Cross-country skiing (flat)", 0.12],
+        ["Cross-country skiing (uphill)", 0.28],
+        ["Weight lifting", 0.08],
+        ["Squash", 0.14],
+        ["Tennis (competitive)", 0.15],
+        ["Tennis (recreational)", 0.11],
+        ["Archery", 0.07],
+        ["Windsurfing", 0.08],
+        ["Yoga", 0.06]
+      ];
+      const ZONE_IDX = [
+        [1.1, "Purely sedentary"],
+        [1.3, "Quiet work, no regular training or sport"],
+        [1.5, "Work plus low-intensity fitness; people with obesity"],
+        [1.7, "Stressful jobs; training at least three times a week or regular sport"],
+        [1.9, "Work plus daily aerobic or weight training"],
+        [2.1, "Heavy daily training"],
+        [2.3, "Competitive training"]
+      ];
+      const OLD_SPORTS = ["Aerobica poco impegnativa", "Aerobica impegnativa", "Alpinismo", "Ballare (liscio)", "Ballare (moderno)", "Ballare (twist-lambada)", "Baseball", "Boxe (allenamento)", "Bowling", "Calcio (allenamento)", "Camminare a 3 km/ora", "Camminare a 4 km/ora", "Camminare a 5 km/ora", "Camminare a 6 km/ora", "Canoa (amatoriale)", "Canoa (agonistica)", "Canottaggio (agonistico)", "Ciclismo (10 Km/ora)", "Ciclismo (15 Km/ora)", "Ciclismo (agonistico)", "Cyclette a 9 km/ora", "Cyclette a 15 km/ora", "Corsa (12 Km/ora)", "Corsa (8 Km/ora)", "Equitazione (galoppo)", "Equitazione (passo)", "Equitazione (trotto)", "Golf", "Judo", "Karate", "Kendo", "Marcia", "Motociclismo", "Nuoto (dorso)", "Nuoto (rana)", "Nuoto (stile libero lento)", "Nuoto (stile libero veloce)", "Nuoto sul fianco", "Nuoto stile delfino", "Nuoto subaqueo", "Pallanuoto", "Pallacanestro (allenamento)", "Pallavolo (allenamento)", "Pattinare", "Ping Pong", "Remare al vogatore", "Remare su barca", "Salto corda 80 al minuto", "Salto corda 125 al minuto", "Scherma (allenamento)", "Sci da fondo (in pianura)", "Sci da fondo (in salita)", "Sollevamento pesi", "Squash", "Tennis (agonistico)", "Tennis (amatoriale)", "Tiro con l’arco", "Windsurf", "Yoga"];
+      /* Italian → English values stored by the previous (Italian) version */
+      const MIGRATE = {
+        "Maschio": "Male",
+        "Femmina": "Female",
+        "Sonno": "Sleep",
+        "Attività molto leggera": "Very light activity",
+        "Attività leggera": "Light activity",
+        "Attività moderata": "Moderate activity",
+        "Attività intensa": "Intense activity",
+        "Attività molto intensa": "Very intense activity",
+        "Sport vigorosi": "Vigorous sports",
+        "Allenamento estremo": "Extreme training",
+        "Sforzo protratto al massimo": "Maximal sustained effort"
+      };
+      /* ===== Utilities ===== */
+      const $ = (s, r = document) => r.querySelector(s),
+        $$ = (s, r = document) => [...r.querySelectorAll(s)];
+      const nf = (v, d = 0) => (v == null || typeof v !== "number" || !isFinite(v)) ? "–" : v.toLocaleString("en-GB", {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d
+      });
+      const pct = (v, d = 1) => (v == null || !isFinite(v)) ? "–" : (v * 100).toLocaleString("en-GB", {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d
+      }) + "%";
+      const rnd = x => Math.sign(x) * Math.round(Math.abs(x));
+      const num = v => (v === null || v === undefined || v === "" || isNaN(+v)) ? null : +v;
+      const dayN = s => {
+        if (!s) return null;
+        const [y, m, d] = s.split("-").map(Number);
+        return Date.UTC(y, m - 1, d) / 864e5
+      };
+      const isoOf = n => new Date(n * 864e5).toISOString().slice(0, 10);
+      const todayN = () => {
+        const d = new Date();
+        return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5
+      };
+      const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const dfmt = n => {
+        if (n == null) return "–";
+        const [y, m, d] = isoOf(n).split("-");
+        return +d + " " + MON[+m - 1] + " " + y
+      };
+      const dshort = n => {
+        const [, m, d] = isoOf(n).split("-");
+        return +d + " " + MON[+m - 1]
+      };
+      const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      } [c]));
+      const ageFrom = s => {
+        if (!s) return null;
+        const [by, bm, bd] = s.split("-").map(Number), t = new Date();
+        let a = t.getFullYear() - by;
+        if (t.getMonth() + 1 < bm || (t.getMonth() + 1 === bm && t.getDate() < bd)) a--;
+        return a
+      };
+      const getP = (o, p) => p.split(".").reduce((a, k) => a == null ? a : a[k], o);
+
+      function setP(o, p, v) {
+        const ks = p.split(".");
+        let a = o;
+        for (let i = 0; i < ks.length - 1; i++) {
+          const k = ks[i];
+          if (a[k] == null || typeof a[k] !== "object") a[k] = /^\d+$/.test(ks[i + 1]) ? [] : {};
+          a = a[k]
+        }
+        a[ks[ks.length - 1]] = v
+      }
+      const sumArr = a => a.reduce((s, x) => s + (x || 0), 0);
+      /* ===== Food database (embedded JSON): [italian name, kcal, protein, carbs, fat, fibre, english name] per 100 g ===== */
+      const FOODS = JSON.parse(document.getElementById("foods-data").textContent);
+      /* ===== State ===== */
+      const KEY = "biometacalc-v1",
+        OLD_KEY = "dieta-pap-v1";
+
+      function defaults() {
+        const s0 = dayN("2018-08-22"),
+          at = i => isoOf(s0 + i),
+          days = {};
+        [
+          [1, 96.5],
+          [2, 96.7],
+          [3, 96.6],
+          [4, 96.2],
+          [5, 97],
+          [6, 97.3],
+          [7, 96.8],
+          [8, 97],
+          [9, 96.2]
+        ].forEach(([i, w]) => {
+          days[at(i)] = {
+            w
+          }
+        });
+        [2, 4, 6, 7].forEach(i => {
+          days[at(i)].note = "binge"
+        });
+        [
+          [0, 6.8],
+          [1, 6.8],
+          [2, 6.8],
+          [3, 10.1],
+          [4, 10.1],
+          [7, 6.8],
+          [8, 6.8],
+          [9, 6.8]
+        ].forEach(([i, k]) => {
+          (days[at(i)] = days[at(i)] || {}).km = k
+        });
+        Object.assign(days[at(4)], {
+          mx: 125,
+          mn: 96,
+          mh: 63
+        });
+        Object.assign(days[at(8)], {
+          mx: 121,
+          mn: 86,
+          mh: 65
+        });
+        Object.assign(days[at(9)], {
+          mx: 130,
+          mn: 90,
+          mh: 62
+        });
+        const L = ["Sleep", "Very light activity", "Moderate activity", "Light activity"];
+        const sched = [0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 1, 3, 3, 3, 3, 1, 1, 1, 1, 1, 0].map(i => L[i]);
+        const blank = n => Array.from({
+          length: n
+        }, () => ({
+          food: "",
+          g: null
+        }));
+        return {
+          profile: {
+            name: "Utente",
+            height: 0,
+            weight: 0,
+            birth: isoOf(todayN()),
+            sex: "Male",
+            waist: 0,
+            neck: 0,
+            hip: 0
+          },
+          goal: {
+            start: isoOf(todayN()),
+            target: 0,
+            deadline: isoOf(todayN()),
+            intake: 0
+          },
+          diaryDays: 180,
+          schedule: sched,
+          restHR: [null, null, null, null, null, null],
+          zone: {
+            index: 1.1,
+            blocks: 0
+          },
+          consumo: {
+            minutes: null,
+            activity: "",
+            km: null
+          },
+          days: {},
+          runs: [],
+          shoes: {
+            name: "",
+            bought: ""
+          },
+          meals: [{
+            name: "",
+            rows: blank(10)
+          }],
+          recipes: [{
+            name: "",
+            rows: blank(15)
+          }],
+          customFoods: [],
+          theme: "system"
+        };
+      }
+
+      function migrate(o) {
+        const p = o.profile || {};
+        if (MIGRATE[p.sex]) p.sex = MIGRATE[p.sex];
+        if (Array.isArray(o.schedule)) o.schedule = o.schedule.map(x => MIGRATE[x] || x);
+        if (o.consumo && o.consumo.activity) {
+          const k = OLD_SPORTS.indexOf(o.consumo.activity);
+          if (k >= 0) o.consumo.activity = SPORTS[k][0]
+        }
+        return o;
+      }
+      let S;
+
+      function load() {
+        for (const k of [KEY, OLD_KEY]) {
+          try {
+            const r = localStorage.getItem(k);
+            if (r) return migrate(Object.assign(defaults(), JSON.parse(r)))
+          } catch (e) {}
+        }
+        return defaults();
+      }
+      let saveT;
+
+      function save() {
+        clearTimeout(saveT);
+        saveT = setTimeout(() => {
+          try {
+            localStorage.setItem(KEY, JSON.stringify(S))
+          } catch (e) {}
+        }, 200)
+      }
+      /* ===== Foods index (English name, with the Italian original as an alias) ===== */
+      let ALL = [],
+        FMAP = new Map();
+
+      function indexFoods() {
+        ALL = FOODS.map(r => ({
+          it: r[0],
+          k: r[1],
+          p: r[2],
+          c: r[3],
+          f: r[4],
+          fi: r[5],
+          n: r[6],
+          custom: false
+        })).concat((S.customFoods || []).map((r, i) => ({
+          n: r.n,
+          it: "",
+          k: r.k,
+          p: r.p,
+          c: r.c,
+          f: r.f,
+          fi: r.fi,
+          custom: true,
+          ci: i
+        })));
+        FMAP = new Map();
+        ALL.forEach(f => {
+          FMAP.set(f.n.toLowerCase(), f);
+          if (f.it) FMAP.set(f.it.toLowerCase(), f)
+        });
+        $("#foodlist").innerHTML = ALL.map(f => `<option value="${esc(f.n)}">`).join("");
+        ["meals", "recipes"].forEach(k => (S[k] || []).forEach(m => m.rows.forEach(r => {
+          const f = lookup(r.food);
+          if (f) r.food = f.n
+        })));
+      }
+      const lookup = n => n ? FMAP.get(String(n).trim().toLowerCase()) || null : null;
+      /* ===== Model ===== */
+      let M = {};
+
+      function calc() {
+        const p = S.profile,
+          g = S.goal,
+          m = {};
+        const h = num(p.height),
+          w = num(p.weight),
+          male = p.sex === "Male";
+        m.male = male;
+        m.age = ageFrom(p.birth);
+        m.bmi = (w && h) ? w / Math.pow(h / 100, 2) : null;
+        m.bmiCat = m.bmi == null ? "" : m.bmi < 18.5 ? "Underweight" : m.bmi < 25 ? "Normal weight" : m.bmi < 30 ? "Overweight" : "Obesity";
+        if (h) {
+          const lo = 18.5 * Math.pow(h / 100, 2),
+            hi = 24.9 * Math.pow(h / 100, 2);
+          m.ideal = [Math.round(lo * 10) / 10, Math.round(hi * 10) / 10];
+          m.idealMid = Math.round((m.ideal[0] + m.ideal[1]) / 2)
+        }
+        // Body fat
+        let navy = null;
+        if (w && h && p.waist && p.neck && p.hip) {
+          const x = male ? p.waist - p.neck : p.waist + p.hip - p.neck;
+          if (x > 0) {
+            navy = (male ? 495 / (1.0324 - 0.19077 * Math.log10(x) + 0.15456 * Math.log10(h)) - 450 : 495 / (1.29579 - 0.35004 * Math.log10(x) + 0.221 * Math.log10(h)) - 450) / 100
+          }
+        }
+        const deur = (m.bmi != null && m.age != null) ? (1.2 * m.bmi + 0.23 * m.age - 10.8 * (male ? 1 : 0) - 5.4) / 100 : null;
+        const mk = f => f == null || !w ? {
+          fat: null,
+          lean: null,
+          leanKg: null,
+          fatKg: null
+        } : {
+          fat: f,
+          lean: 1 - f,
+          leanKg: w * (1 - f),
+          fatKg: w - w * (1 - f)
+        };
+        m.navy = mk(navy);
+        m.deur = mk(deur);
+        m.whr = (p.waist && p.hip) ? p.waist / p.hip : null;
+        m.idealWaist = p.hip ? p.hip * (male ? 0.9 : 0.7) : null;
+        m.waistLose = (m.idealWaist != null && p.waist) ? p.waist - m.idealWaist : null;
+        // Basal metabolic rate
+        const a = m.age;
+        let bmr = [null, null, null, null];
+        if (w && h && a != null) {
+          bmr[0] = male ? w * 24 : w * 24 * 0.85;
+          const t = male ? [
+            [59, 12.3, 609],
+            [29, 11.6, 879],
+            [17, 15.3, 679],
+            [10, 17.5, 651]
+          ] : [
+            [59, 9, 688],
+            [29, 8.7, 829],
+            [17, 14.7, 496],
+            [10, 12.2, 746]
+          ];
+          const row = t.find(r => a > r[0]);
+          bmr[1] = row ? row[1] * w + row[2] : 0;
+          bmr[2] = male ? 66.473 + 13.7156 * w + 5.033 * h - 6.775 * a : 655.095 + 9.5634 * w + 1.849 * h - 4.6756 * a;
+          bmr[3] = male ? 10 * w + 6.25 * h - CFG.mifflinMaleAge * a + 5 : 10 * w + 6.25 * h - 5 * a - 161;
+        }
+        m.bmr = bmr;
+        m.bmrH = bmr.map(x => x == null ? null : x / 24);
+        m.adjH = (m.bmrH[3] != null && m.navy.lean != null) ? m.bmrH[3] * m.navy.lean : null;
+        m.adjD = m.adjH == null ? null : m.adjH * 24;
+        m.actHours = ACTS.map(([n]) => S.schedule.filter(x => x === n).length);
+        m.actM = ACTS.map(([n, c], i) => m.adjH == null ? null : m.actHours[i] * m.adjH * c);
+        m.actF = m.actM.map(x => x == null ? null : x * 0.9);
+        m.sumM = m.adjH == null ? null : sumArr(m.actM);
+        m.sumF = m.adjH == null ? null : sumArr(m.actF);
+        m.totHours = sumArr(m.actHours);
+        m.need = (m.totHours === 24 && m.sumM != null) ? (male ? m.sumM : m.sumF) : null;
+        // Goal
+        const startN = dayN(g.start),
+          endN = dayN(g.deadline),
+          tn = todayN();
+        m.startN = startN;
+        m.startW = w;
+        m.toLose = (w != null && num(g.target) != null) ? w - g.target : null;
+        m.daysLeft = endN != null ? Math.round(endN - tn) : null;
+        m.suggested = (m.need != null && m.toLose != null && m.daysLeft > 0) ? m.need - (m.toLose * CFG.kcalPerKg) / m.daysLeft : null;
+        m.intake = num(g.intake);
+        m.diff = (m.need != null && m.intake != null) ? m.need - m.intake : null;
+        m.perDay = m.diff == null ? null : m.diff / CFG.kcalPerKg;
+        m.dur = (m.diff != null && m.diff > 0 && m.toLose != null) ? Math.round(m.toLose * CFG.kcalPerKg / m.diff) : null;
+        m.endPlan = (m.dur != null && startN != null) ? startN + m.dur : null;
+        // Weights (carry-forward)
+        const ws = [];
+        Object.keys(S.days).forEach(k => {
+          const v = S.days[k];
+          if (v && num(v.w) != null) ws.push([dayN(k), +v.w])
+        });
+        ws.sort((x, y) => x[0] - y[0]);
+        m.weights = ws;
+        m.wOn = n => {
+          if (startN != null && n <= startN) return w;
+          let r = w;
+          for (const [d, v] of ws) {
+            if (d <= n) r = v;
+            else break
+          }
+          return r
+        };
+        m.latestW = ws.length ? ws[ws.length - 1][1] : w;
+        m.lastEntryN = ws.length ? ws[ws.length - 1][0] : startN;
+        // Diary range
+        const keys = Object.keys(S.days).map(dayN).filter(x => x != null);
+        const maxN = Math.max(startN != null ? startN + Math.max(5, num(S.diaryDays) || 180) - 1 : 0, ...keys);
+        m.N = startN != null ? Math.min(1500, maxN - startN + 1) : 0;
+        m.lost = (w != null && m.latestW != null) ? w - m.latestW : null;
+        m.elapsed = startN != null ? tn - startN : null;
+        return m;
+      }
+      /* ===== UI helpers ===== */
+      const I = (p, t = "n", a = "") => {
+        const v = getP(S, p);
+        const ty = t === "n" ? 'type="number" step="any" inputmode="decimal"' : t === "d" ? 'type="date"' : 'type="text"';
+        return `<input data-p="${p}" data-t="${t}" ${ty} value="${v==null?"":esc(v)}" ${a}>`
+      };
+      const SEL = (p, opts, a = "") => {
+        const v = getP(S, p);
+        return `<select data-p="${p}" data-t="s" ${a}>` + opts.map(o => {
+          const [val, lab] = Array.isArray(o) ? o : [o, o];
+          return `<option value="${esc(val)}"${String(val)===String(v)?" selected":""}>${esc(lab)}</option>`
+        }).join("") + `</select>`
+      };
+      const O = (id, cls = "") => `<span class="v ${cls}" id="${id}"></span>`;
+      const ROW = (l, c, cls = "") => `<div class="row ${cls}"><label>${l}</label>${c}</div>`;
+      const set = (id, t, cls) => {
+        const e = document.getElementById(id);
+        if (e) {
+          e.textContent = t;
+          if (cls !== undefined) e.className = "v " + cls
+        }
+      };
+      const setH = (id, h) => {
+        const e = document.getElementById(id);
+        if (e) e.innerHTML = h
+      };
+      const setAlert = (id, t) => {
+        const e = document.getElementById(id);
+        if (e) e.textContent = t || ""
+      };
+      const cells = (tr, vals) => {
+        if (!tr) return;
+        vals.forEach(([i, t, cls]) => {
+          const c = tr.children[i];
+          if (c) {
+            c.textContent = t;
+            if (cls !== undefined) c.className = cls
+          }
+        })
+      };
+      /* ===== Chart (weight over time) ===== */
+      function diaryModel() {
+        const rows = [];
+        if (M.startN == null) return rows;
+        let prev = null;
+        for (let i = 0; i < M.N; i++) {
+          const n = M.startN + i,
+            k = isoOf(n),
+            d = S.days[k] || {};
+          const w = i === 0 ? M.startW : num(d.w);
+          const t = (M.perDay != null && M.startW != null) ? M.startW - i * M.perDay : null;
+          const bmi = (w != null && num(S.profile.height)) ? w / Math.pow(S.profile.height / 100, 2) : null;
+          const fat = (bmi != null && M.age != null) ? (1.2 * bmi + 0.23 * M.age - 10.8 * (M.male ? 1 : 0) - 5.4) / 100 : null;
+          rows.push({
+            i,
+            n,
+            k,
+            w,
+            t,
+            diff: (w != null && t != null) ? t - w : null,
+            daily: (w != null && prev != null && i > 0) ? prev - w : null,
+            bmi,
+            fat
+          });
+          if (w != null) prev = w;
+        }
+        return rows;
+      }
+
+      function drawChart(all, box, compact) {
+        if (!box) return;
+        const W = Math.max(300, Math.round(box.clientWidth) || 760),
+          small = W < 560,
+          H = small ? 240 : 300,
+          ml = small ? 34 : 44,
+          mr = small ? 52 : 78,
+          mt = 12,
+          mb = 28,
+          pw = W - ml - mr,
+          ph = H - mt - mb;
+        const lastI = Math.max(0, ...all.filter(r => r.w != null).map(r => r.i));
+        const rows = all.slice(0, Math.min(all.length, Math.max(lastI + 30, Math.round(lastI * 1.5)) + 1));
+        const N = rows.length;
+        if (N < 2 || M.startW == null) {
+          box.innerHTML = '<p class="note">Add a start date and weight to see the chart.</p>';
+          return
+        }
+        const tgt = num(S.goal.target);
+        const theory = rows.filter(r => r.t != null && (tgt == null || r.t >= tgt - 0.0001));
+        const vals = [...rows.filter(r => r.w != null).map(r => r.w), ...theory.map(r => r.t)];
+        if (tgt != null) vals.push(tgt);
+        const lo = Math.floor(Math.min(...vals) - 1),
+          hi = Math.ceil(Math.max(...vals) + 1);
+        const X = i => ml + i / (N - 1) * pw,
+          Y = v => mt + (hi - v) / (hi - lo) * ph;
+        const step = (hi - lo) > 40 ? 10 : (hi - lo) > 16 ? 5 : 2;
+        let g = "";
+        for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) g += `<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-opacity=".7"/><text x="${ml-8}" y="${Y(v)+4}" text-anchor="end" fill="var(--ink-3)" font-size="11.5">${v}</text>`;
+        const nt = Math.min(small ? 3 : 5, N - 1);
+        for (let j = 0; j <= nt; j++) {
+          const i = Math.round(j * (N - 1) / nt);
+          g += `<text x="${X(i)}" y="${H-8}" text-anchor="${j===0?"start":j===nt?"end":"middle"}" fill="var(--ink-3)" font-size="11.5">${dshort(rows[i].n)}</text>`
+        }
+        const pathOf = a => a.map((r, j) => (j ? "L" : "M") + X(r.i).toFixed(1) + " " + Y(r.v).toFixed(1)).join("");
+        const act = rows.filter(r => r.w != null).map(r => ({
+            i: r.i,
+            v: r.w
+          })),
+          th = theory.map(r => ({
+            i: r.i,
+            v: r.t
+          }));
+        let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight over time: actual, planned and target">${g}`;
+        if (tgt != null) s += `<line x1="${ml}" x2="${W-mr}" y1="${Y(tgt)}" y2="${Y(tgt)}" stroke="var(--ink-3)" stroke-dasharray="2 4"/><text x="${W-mr+8}" y="${Y(tgt)+4}" fill="var(--ink-2)" font-size="12">${small?nf(tgt,0):"Target "+nf(tgt,1)}</text>`;
+        if (th.length > 1) s += `<path d="${pathOf(th)}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-dasharray="6 4"/>`;
+        if (act.length) s += `<path d="${pathOf(act)}" fill="none" stroke="var(--s1)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` + act.map(p => `<circle cx="${X(p.i)}" cy="${Y(p.v)}" r="3.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>`).join("");
+        if (act.length) {
+          const l = act[act.length - 1];
+          s += `<text x="${X(l.i)+9}" y="${Y(l.v)-9}" fill="var(--ink)" font-size="12" font-weight="600">${nf(l.v,1)}</text>`
+        }
+        s += `<line class="xh" y1="${mt}" y2="${H-mb}" stroke="var(--ink-3)" style="display:none"/><rect class="hit" x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent"/></svg><div class="tip"></div>`;
+        box.innerHTML = s;
+        const svg = $("svg", box),
+          hit = $(".hit", box),
+          xh = $(".xh", box),
+          tip = $(".tip", box);
+        const move = ev => {
+          const r = svg.getBoundingClientRect(),
+            sx = (ev.clientX - r.left) / r.width * W;
+          let i = Math.round((sx - ml) / pw * (N - 1));
+          i = Math.max(0, Math.min(N - 1, i));
+          const row = rows[i];
+          xh.setAttribute("x1", X(i));
+          xh.setAttribute("x2", X(i));
+          xh.style.display = "";
+          tip.innerHTML = `<b>${WD[new Date(row.n*864e5).getUTCDay()]} ${dfmt(row.n)}</b><br>Actual: ${nf(row.w,1)} kg<br>Planned: ${nf(row.t,1)} kg`;
+          tip.style.display = "block";
+          const px = X(i) / W * r.width;
+          tip.style.left = Math.min(Math.max(0, px + 10), r.width - tip.offsetWidth) + "px";
+          tip.style.top = "8px"
+        };
+        hit.addEventListener("pointermove", move);
+        hit.addEventListener("pointerdown", move);
+        hit.addEventListener("pointerleave", () => {
+          xh.style.display = "none";
+          tip.style.display = "none"
+        });
+      }
+      const LEGEND = `<div class="legend"><span><i style="border-color:var(--s1);border-top-width:3px"></i>Actual weight</span><span><i style="border-color:var(--s2);border-top-style:dashed"></i>Planned weight</span><span><i style="border-color:var(--ink-3);border-top-style:dotted"></i>Target</span></div>`;
+      /* ===== Overview (dashboard) ===== */
+      function fcModel() {
+        const a = M.age,
+          r = {
+            age: a
+          };
+        if (a == null) return r;
+        r.max = [220 - a, 208 - a * 0.7];
+        const rv = S.restHR.map(num).filter(x => x != null);
+        r.rest = rv.length ? sumArr(rv) / rv.length : null;
+        r.res = r.rest == null ? null : r.max.map(x => x - r.rest);
+        r.zmax = FC_MAX.map(([lo, hi]) => ({
+          txt: r.max.map(m => rnd(m * lo / 100) + " – " + rnd(m * hi / 100)),
+          L: Math.max(...r.max.map(m => rnd(m * lo / 100))),
+          U: Math.min(...r.max.map(m => rnd(m * hi / 100)))
+        }));
+        r.zres = r.res == null ? null : FC_RIS.map(([lo, hi]) => ({
+          txt: r.res.map(m => (rnd(m * lo / 100) + r.rest) + " – " + (rnd(m * hi / 100) + r.rest)),
+          L: Math.max(...r.res.map(m => rnd(m * lo / 100) + r.rest)),
+          U: Math.min(...r.res.map(m => rnd(m * hi / 100) + r.rest))
+        }));
+        r.safe = FC_MAX.map((z, i) => {
+          const a = r.zmax[i],
+            b = r.zres ? r.zres[i] : null;
+          const mn = b ? Math.max(a.L, b.L) : a.L,
+            mx = b ? Math.max(a.U, b.U) : a.U;
+          return {
+            mn,
+            mx,
+            avg: (mn + mx) / 2
+          }
+        });
+        return r
+      }
+      const FC_MAX = [
+        [80, 100, "Competitive anaerobic training"],
+        [70, 80, "Cardiovascular training"],
+        [60, 70, "Fat-loss exercise"],
+        [50, 60, "Moderate activity"]
+      ];
+      const FC_RIS = [
+        [70, 100],
+        [55, 70],
+        [40, 55],
+        [20, 40]
+      ];
+
+      function weeklyKm() {
+        const ks = Object.keys(S.days).filter(k => num(S.days[k].km)).map(dayN).filter(x => x != null);
+        if (!ks.length) return null;
+        const mon = n => n - ((new Date(n * 864e5).getUTCDay() + 6) % 7);
+        const last = mon(Math.max(...ks)),
+          out = [];
+        for (let j = 7; j >= 0; j--) out.push({
+          s: last - 7 * j,
+          km: 0
+        });
+        ks.forEach(n => {
+          const b = out.find(o => o.s === mon(n));
+          if (b) b.km += num(S.days[isoOf(n)].km)
+        });
+        return out
+      }
+
+      function lastReading(f) {
+        const k = Object.keys(S.days).filter(k => num(S.days[k][f[0]]) != null).sort().pop();
+        return k ? {
+          n: dayN(k),
+          a: S.days[k][f[0]],
+          b: S.days[k][f[1]],
+          c: S.days[k][f[2]]
+        } : null
+      }
+      const hb = (l, v, max, txt) => `<div class="hb"><span>${esc(l)}</span><span class="tr"><i style="width:${max>0?Math.max(0,Math.min(100,v/max*100)).toFixed(1):0}%"></i></span><span class="vv">${txt}</span></div>`;
+      const stat = (k, n, d) => `<div class="stat"><div class="k">${k}</div><div class="n">${n}</div><div class="d">${d||"&nbsp;"}</div></div>`;
+      const tabDash = {
+        id: "overview",
+        title: "Overview",
+        group: "",
+        desc: "Where you stand against your goal, with the key numbers from every section.",
+        icon: '<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
+        html: () => `<div class="hero"><div class="hero-main"><div class="lead"><span class="n" id="h-w">–</span><span class="u">kg</span><span class="s" id="h-sub"></span></div><div class="track" id="track"></div>${LEGEND}<div class="chart" id="chart-dash"></div></div><div class="stats" id="h-stats"></div></div><div class="trio"><div class="panel"><h2>Energy balance</h2><div id="h-energy"></div></div><div class="panel"><h2>Body composition</h2><div id="h-comp"></div></div><div class="panel"><h2>Walking distance per week</h2><div id="h-km"></div></div></div><div class="grid"><div class="panel"><h2>Vitals</h2><div id="h-vit"></div></div><div class="panel"><h2>Needs attention</h2><ul class="attn" id="h-attn"></ul></div></div>`,
+        update() {
+          const rows = diaryModel();
+          set("h-w", nf(M.latestW, 1));
+          let sub = "";
+          if (M.lost != null && M.startN != null) {
+            const l = Math.abs(M.lost);
+            sub = `${nf(l,1)} kg ${M.lost>=0?"lost":"gained"} since ${dfmt(M.startN)}`;
+            if (M.toLose > 0 && M.lost > 0) sub += ` · ${nf(Math.min(100,M.lost/M.toLose*100),0)}% of the way to ${nf(num(S.goal.target),1)} kg`
+          }
+          set("h-sub", sub);
+          // progress track: start → target
+          const tg = num(S.goal.target),
+            sw = M.startW,
+            cw = M.latestW,
+            tr = $("#track");
+          if (tr) {
+            if (sw != null && tg != null && cw != null && sw !== tg) {
+              const p = Math.max(0, Math.min(100, (sw - cw) / (sw - tg) * 100));
+              tr.innerHTML = `<div class="rail"></div><div class="fill" style="width:${p}%"></div><span class="mk" style="left:0;border-color:var(--ink-3)"></span><span class="mk cur" style="left:${p}%"></span><span class="mk" style="left:100%"></span><span class="lb l" style="left:0">Start <b>${nf(sw,1)}</b></span><span class="lb r" style="left:100%">Target <b>${nf(tg,1)}</b></span><span class="lb top" style="left:${Math.min(94,Math.max(6,p))}%"><b>${nf(cw,1)}</b></span>`;
+            } else tr.innerHTML = ""
+          }
+          // stats
+          const dur = M.dur != null ? `${nf(M.dur)} days planned` : "";
+          let time = "–",
+            timeD = "";
+          if (M.elapsed != null) {
+            time = nf(M.elapsed) + " days";
+            timeD = M.daysLeft == null ? "" : (M.daysLeft > 0 ? `${nf(M.daysLeft)} days to the target date` : `Target date passed (${dfmt(dayN(S.goal.deadline))})`)
+          }
+          setH("h-stats", stat("Body mass index", nf(M.bmi, 1), M.bmiCat || "") + stat("Body fat", pct(M.deur.fat), `Deurenberg · US Navy ${pct(M.navy.fat)}`) + stat("Daily energy need", M.need == null ? "–" : nf(M.need) + " kcal", "Estimated total expenditure") + stat("Planned intake", M.intake == null ? "–" : nf(M.intake) + " kcal", M.diff == null ? "" : (M.diff > 0 ? `${nf(M.diff)} kcal/day deficit` : M.diff < 0 ? `${nf(-M.diff)} kcal/day surplus` : "Maintenance")) + stat("Forecast finish", M.endPlan == null ? "–" : dfmt(M.endPlan), dur) + stat("Time on plan", time, timeD));
+          drawChart(rows, $("#chart-dash"));
+          // energy
+          let e = "";
+          if (M.need != null) {
+            const mx = Math.max(M.need, M.intake || 0);
+            e += hb("Daily need", M.need, mx, nf(M.need)) + hb("Planned intake", M.intake || 0, mx, nf(M.intake)) + `<h3>Where the energy goes (kcal)</h3>`;
+            const arr = (M.male ? M.actM : M.actF),
+              mm = Math.max(...arr);
+            ACTS.forEach((a, i) => {
+              if (M.actHours[i]) e += hb(`${a[0]} · ${M.actHours[i]} h`, arr[i], mm, nf(arr[i]))
+            })
+          } else e = '<p class="empty">Complete the profile and a 24-hour schedule in Energy needs to see your balance.</p>';
+          setH("h-energy", e);
+          // composition
+          const seg = (label, c) => c.lean == null ? `<h3>${label}</h3><p class="empty">Not available yet</p>` : `<h3>${label}</h3><div class="seg" role="img" aria-label="${label}: lean ${pct(c.lean)}, fat ${pct(c.fat)}"><i style="width:${c.lean*100}%;background:var(--accent)"></i><i style="width:${c.fat*100}%;background:var(--fat)"></i></div><div class="seg-l"><span>Lean ${nf(c.leanKg,1)} kg · ${pct(c.lean)}</span><span>Fat ${nf(c.fatKg,1)} kg · ${pct(c.fat)}</span></div>`;
+          setH("h-comp", seg("Deurenberg (BMI, age, sex)", M.deur) + seg("US Navy (circumferences)", M.navy) + `<div class="row"><span class="l">Waist-to-hip ratio</span><span class="v">${nf(M.whr,2)}</span></div><div class="row"><span class="l">Waist to lose for the ideal ratio</span><span class="v">${nf(M.waistLose,1)} cm</span></div>`);
+          // weekly km
+          const wk = weeklyKm();
+          if (!wk) setH("h-km", '<p class="empty">Log distances in Walks to see your weekly totals.</p>');
+          else {
+            const W = 300,
+              H = 150,
+              mb = 22,
+              mt = 16,
+              mx = Math.max(...wk.map(w => w.km), 1),
+              bw = (W - 8) / wk.length;
+            setH("h-km", `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Walking distance for the last ${wk.length} weeks"><line x1="0" x2="${W}" y1="${H-mb}" y2="${H-mb}" stroke="var(--line)"/>` + wk.map((w, i) => {
+              const h = w.km / mx * (H - mb - mt),
+                x = 4 + i * bw;
+              return `<rect x="${x+4}" y="${H-mb-h}" width="${bw-8}" height="${Math.max(h,0)}" rx="3" fill="var(--accent)"><title>Week of ${dfmt(w.s)}: ${nf(w.km,1)} km</title></rect>` + (i === wk.length - 1 || w.km === mx ? `<text x="${x+bw/2}" y="${H-mb-h-4}" text-anchor="middle" font-size="11" fill="var(--ink-2)">${nf(w.km,1)}</text>` : "") + (i % 2 === 0 ? `<text x="${x+bw/2}" y="${H-6}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${dshort(w.s)}</text>` : "")
+            }).join("") + `</svg><p class="note">Weeks starting Monday, ending with your latest logged walk. Total ${nf(sumArr(wk.map(w=>w.km)),1)} km.</p>`)
+          }
+          // vitals
+          const bm = lastReading(["mx", "mn", "mh"]),
+            be = lastReading(["ex", "en", "eh"]),
+            fc = fcModel();
+          let v = "";
+          v += `<div class="row"><span class="l">Blood pressure, latest morning</span><span class="v">${bm?`${bm.a}/${nf(num(bm.b))} · ${nf(num(bm.c))} bpm`:"–"}</span></div>`;
+          v += `<div class="row"><span class="l">Blood pressure, latest evening</span><span class="v">${be?`${be.a}/${nf(num(be.b))} · ${nf(num(be.c))} bpm`:"–"}</span></div>`;
+          v += `<div class="row"><span class="l">Resting heart rate (average)</span><span class="v">${fc.rest!=null?nf(fc.rest,0)+" bpm":"–"}</span></div>`;
+          v += `<div class="row"><span class="l">Estimated maximum heart rate</span><span class="v">${fc.max?nf(fc.max[0])+"–"+nf(fc.max[1])+" bpm":"–"}</span></div>`;
+          v += `<div class="row"><span class="l">Fat-loss training range</span><span class="v">${fc.safe?nf(fc.safe[2].mn)+"–"+nf(fc.safe[2].mx)+" bpm":"–"}</span></div>`;
+          setH("h-vit", v);
+          // attention
+          const a = [];
+          if (M.daysLeft != null && M.daysLeft <= 0) a.push(`The target date (${dfmt(dayN(S.goal.deadline))}) has passed. Update it in Goal & forecast to get a suggested intake.`);
+          if (M.totHours !== 24) a.push(`The daily schedule covers ${M.totHours} of 24 hours. Complete it in Energy needs.`);
+          if (M.navy.fat == null) a.push("Add waist, neck and hip measurements in Profile for the US Navy body-fat estimate and the energy calculation.");
+          if (M.suggested != null && M.suggested < CFG.minKcal) a.push(`Reaching the target on time needs about ${nf(M.suggested)} kcal/day, below ${nf(CFG.minKcal)} kcal. Choose a later date or a smaller goal.`);
+          if (M.diff != null && M.diff <= 0) a.push("Planned intake is not below your daily need, so no weight loss is forecast.");
+          if (M.lastEntryN != null && todayN() - M.lastEntryN > 7) a.push(`Last weigh-in: ${dfmt(M.lastEntryN)}. Log a recent weight in the Weight diary.`);
+          setH("h-attn", a.length ? a.map(x => `<li>${esc(x)}</li>`).join("") : '<li class="good">All inputs are complete and consistent.</li>');
+        }
+      };
+      /* ===== Profile ===== */
+      const tabProfile = {
+        id: "profile",
+        title: "Profile & composition",
+        group: "Body",
+        desc: "Body mass index, lean and fat mass, and waist-to-hip ratio.",
+        icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+        html: () => `<div class="grid"><div class="card"><h2>Basic data</h2>
+ ${ROW("Name",I("profile.name","s"))}${ROW("Height (cm)",I("profile.height"))}${ROW("Weight (kg)",I("profile.weight"))}
+ ${ROW("Date of birth",I("profile.birth","d"))}${ROW("Sex",SEL("profile.sex",["Male","Female"]))}${ROW("Age (completed years)",O("p-age"))}
+ <p class="note">The weight entered here is the starting weight of the diary. <button class="btn sm" data-act="useLatest">Use latest diary weight</button></p></div><div class="card"><h2>Body mass index</h2>
+ ${ROW("BMI",O("p-bmi"),"big")}${ROW("Category",O("p-cat"))}${ROW("Normal-weight range",O("p-ideal"))}${ROW("Healthy weight (midpoint)",O("p-mid"))}
+ <div class="tw" style="margin-top:10px"><table><tr><th class="t">Category</th><th>BMI</th></tr><tr><td>Underweight</td><td>below 18.5</td></tr><tr><td>Normal weight</td><td>18.5 – 24.9</td></tr><tr><td>Overweight</td><td>25 – 29.9</td></tr><tr><td>Obesity</td><td>30 or more</td></tr></table></div></div><div class="card"><h2>Circumferences (cm)</h2>
+ ${ROW("Waist",I("profile.waist"))}${ROW("Neck",I("profile.neck"))}${ROW("Hips",I("profile.hip"))}
+ <h3>Waist-to-hip ratio</h3>
+ ${ROW("Ratio",O("p-whr"))}${ROW("Ideal waist (cm)",O("p-iw"))}${ROW("Waist to lose (cm)",O("p-wl"))}
+ <p class="note">Ideal ratio: below 0.9 for men, below 0.7 for women, as in the original workbook.</p></div><div class="card wide"><h2>Lean and fat mass</h2><div class="tw"><table><tr><th class="t"></th><th>US Navy</th><th>Deurenberg</th></tr><tr><td>Lean mass (kg)</td><td>${O("m-nl")}</td><td>${O("m-dl")}</td></tr><tr><td>Fat mass (kg)</td><td>${O("m-nf")}</td><td>${O("m-df")}</td></tr><tr><td>Lean mass (%)</td><td>${O("m-nlp")}</td><td>${O("m-dlp")}</td></tr><tr><td>Body fat (%)</td><td>${O("m-nfp")}</td><td>${O("m-dfp")}</td></tr></table></div><p class="note">US Navy needs waist, neck and hip (and a waist larger than the neck for men). Deurenberg uses BMI, age and sex.</p><div class="tw" style="margin-top:12px"><table><tr><th class="t">Body fat</th><th>Women</th><th>Men</th></tr><tr><td>Essential fat</td><td>10–13%</td><td>2–5%</td></tr><tr><td>Athletes</td><td>14–20%</td><td>6–13%</td></tr><tr><td>Fitness</td><td>21–24%</td><td>14–17%</td></tr><tr><td>Average</td><td>25–31%</td><td>18–24%</td></tr><tr><td>Excess</td><td>32%+</td><td>25%+</td></tr></table></div></div></div>`,
+        update() {
+          set("p-age", M.age == null ? "–" : String(M.age));
+          set("p-bmi", nf(M.bmi, 1));
+          set("p-cat", M.bmiCat || "–");
+          set("p-ideal", M.ideal ? nf(M.ideal[0], 1) + " – " + nf(M.ideal[1], 1) + " kg" : "–");
+          set("p-mid", M.idealMid ? nf(M.idealMid) + " kg" : "–");
+          set("p-whr", nf(M.whr, 2));
+          set("p-iw", nf(M.idealWaist, 1));
+          set("p-wl", nf(M.waistLose, 1));
+          set("m-nl", nf(M.navy.leanKg, 1));
+          set("m-dl", nf(M.deur.leanKg, 1));
+          set("m-nf", nf(M.navy.fatKg, 1));
+          set("m-df", nf(M.deur.fatKg, 1));
+          set("m-nlp", pct(M.navy.lean));
+          set("m-dlp", pct(M.deur.lean));
+          set("m-nfp", pct(M.navy.fat));
+          set("m-dfp", pct(M.deur.fat));
+        }
+      };
+      /* ===== Energy needs ===== */
+      const tabEnergy = {
+        id: "energy",
+        title: "Energy needs",
+        group: "Body",
+        desc: "Basal metabolism by four methods, plus a 24-hour activity schedule that gives your daily energy need.",
+        icon: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+        html: () => `<div class="grid"><div class="card wide"><h2>Basal metabolic rate</h2><div class="tw"><table><tr><th class="t"></th><th>Method 1</th><th>Method 2</th><th>Method 3</th><th>Method 4</th></tr><tr><td>Basal metabolism (kcal/day)</td>${[0,1,2,3].map(i=>`<td>${O("f-b"+i)}</td>`).join("")}</tr><tr><td>Calories burned per hour</td>${[0,1,2,3].map(i=>`<td>${O("f-h"+i)}</td>`).join("")}</tr></table></div><p class="note">Method 1: weight × 24 (×0.85 for women). Method 2: age-band table (Schofield/WHO). Method 3: Harris-Benedict. Method 4: Mifflin-St Jeor.</p><div style="margin-top:12px">${ROW("Adapted resting need (kcal/hour)",O("f-adjh"))}${ROW("Adapted resting need (kcal/day)",O("f-adjd"))}</div><p class="note">Hourly Method 4 value × lean-mass fraction (US Navy), as in the original workbook.</p></div><div class="card"><h2>Metabolism from activity</h2><div class="tw"><table><tr><th class="t">Activity</th><th>Hours</th><th>Men</th><th>Women</th><th>Coeff.</th></tr>
+ ${ACTS.map(([n,c],i)=>`<tr><td>${n}</td><td>${O("f-ah"+i)}</td><td>${O("f-am"+i)}</td><td>${O("f-af"+i)}</td><td>${nf(c,2)}</td></tr>`).join("")}
+ <tr class="tot"><td>Total</td><td>${O("f-th")}</td><td>${O("f-sm")}</td><td>${O("f-sf")}</td><td></td></tr></table></div>
+ ${ROW("Daily energy need",O("f-need"),"big")}
+ <div class="alert" id="f-alert"></div></div><div class="card"><h2>24-hour schedule</h2><div class="tw" style="max-height:560px"><table><tr><th class="t">Hour</th><th class="t">Activity</th></tr>
+ ${Array.from({length:24},(_,i)=>` < tr > < td > $ {
+          String(i).padStart(2, "0")
+        }: 00– $ {
+          String((i + 1) % 24).padStart(2, "0")
+        }: 00 < /td><td class="t">${SEL("schedule."+i,ACTS.map(a=>a[0]))}</td > < /tr>`).join("")}</table > < /div></div > < /div>`,
+        update() {
+          [0, 1, 2, 3].forEach(i => {
+            set("f-b" + i, nf(M.bmr[i]));
+            set("f-h" + i, nf(M.bmrH[i], 1))
+          });
+          set("f-adjh", nf(M.adjH, 1));
+          set("f-adjd", nf(M.adjD));
+          ACTS.forEach((a, i) => {
+            set("f-ah" + i, String(M.actHours[i]));
+            set("f-am" + i, nf(M.actM[i]));
+            set("f-af" + i, nf(M.actF[i]))
+          });
+          set("f-th", String(M.totHours));
+          set("f-sm", nf(M.sumM));
+          set("f-sf", nf(M.sumF));
+          set("f-need", M.need == null ? "–" : nf(M.need) + " kcal");
+          setAlert("f-alert", M.totHours !== 24 ? `The schedule covers ${M.totHours} hours; it must cover exactly 24 to give a daily need.` : (M.adjH == null ? "Sex, weight, height, age and the circumferences (for US Navy lean mass) are required." : ""));
+        }
+      };
+      /* ===== Goal & forecast ===== */
+      const tabGoal = {
+        id: "goal",
+        title: "Goal & forecast",
+        group: "Body",
+        desc: "Set a target weight and date to get a suggested intake, or enter your intake to forecast the finish date.",
+        icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+        html: () => `<div class="grid"><div class="card"><h2>Desired result</h2>
+ ${ROW("Diet start date",I("goal.start","d"))}${ROW("Target weight (kg)",I("goal.target"))}${ROW("Date to reach it",I("goal.deadline","d"))}
+ ${ROW("Starting weight (kg)",O("o-w0"))}${ROW("Weight to lose (kg)",O("o-lose"))}${ROW("Days left to the date",O("o-days"))}
+ ${ROW("Suggested intake (kcal/day)",O("o-sugg"),"big")}
+ <div class="alert" id="o-alert"></div></div><div class="card"><h2>Forecast from your intake</h2>
+ ${ROW("Daily intake (kcal)",I("goal.intake"))}${ROW("Daily energy need",O("o-need"))}${ROW("Daily deficit (kcal)",O("o-diff"))}
+ ${ROW("Theoretical loss per day (kg)",O("o-perday"))}${ROW("Forecast duration (days)",O("o-dur"),"big")}${ROW("Forecast finish date",O("o-end"))}
+ <p class="note">Uses 7,000 kcal per kg of body weight, as in the original workbook.</p></div></div>`,
+        update() {
+          set("o-w0", nf(M.startW, 1));
+          set("o-lose", nf(M.toLose, 1));
+          set("o-days", M.daysLeft == null ? "–" : nf(M.daysLeft));
+          set("o-sugg", nf(M.suggested));
+          let al = "";
+          if (M.daysLeft != null && M.daysLeft <= 0) al = "The target date has passed, so a suggested intake can't be calculated.";
+          else if (M.suggested != null && M.suggested < CFG.minKcal) al = "Warning: intakes below 1,200 kcal/day can be a health risk. Choose a later date or a smaller goal.";
+          else if (M.need == null) al = "Daily energy need is not available yet (see Energy needs).";
+          setAlert("o-alert", al);
+          set("o-need", M.need == null ? "–" : nf(M.need));
+          set("o-diff", nf(M.diff));
+          set("o-perday", nf(M.perDay, 3));
+          set("o-dur", M.dur == null ? (M.diff != null && M.diff <= 0 ? "not reachable (no deficit)" : "–") : nf(M.dur));
+          set("o-end", M.endPlan == null ? "–" : dfmt(M.endPlan));
+        }
+      };
+      /* ===== Tracking tables ===== */
+      const dateCell = n => `<td>${WD[new Date(n*864e5).getUTCDay()]} ${dfmt(n)}</td>`;
+
+      function buildRanges() {
+        M = calc();
+        const trs = {
+          d: "",
+          w: "",
+          p: ""
+        };
+        if (M.startN != null)
+          for (let i = 0; i < M.N; i++) {
+            const n = M.startN + i,
+              k = isoOf(n),
+              cls = new Date(n * 864e5).getUTCDay() === 0 ? ' class="sun"' : "";
+            trs.d += `<tr${cls}>${dateCell(n)}<td></td><td>${i===0?`<input class="w-s" type="number" disabled value="${M.startW??""}" title="Starting weight from the profile">`:I("days."+k+".w","n",'class="w-s"')}</td><td></td><td></td><td></td><td></td><td class="t">${I("days."+k+".note","s",'class="w-l"')}</td></tr>`;
+            trs.w += `<tr${cls}>${dateCell(n)}<td></td><td>${I("days."+k+".km","n",'class="w-s"')}</td><td>${I("days."+k+".steps","n",'class="w-s"')}</td>${"<td></td>".repeat(8)}</tr>`;
+            trs.p += `<tr${cls}>${dateCell(n)}<td></td>${["mx","mn","mh","ex","en","eh"].map(f=>`<td>${I("days."+k+"."+f,"n",'class="w-xs"')}</td>`).join("")}<td class="t">${I("days."+k+".pnote","s",'class="w-m"')}</td></tr>`;
+          }
+        const put = (id, h) => {
+          const e = document.getElementById(id);
+          if (e) e.innerHTML = h
+        };
+        put("diary-body", trs.d);
+        put("walk-body", trs.w);
+        put("bp-body", trs.p);
+      }
+      const noStart = '<p class="note">Set a diet start date in Goal &amp; forecast to enable the daily tables.</p>';
+      const tabDiary = {
+        id: "diary",
+        title: "Weight diary",
+        group: "Tracking",
+        desc: "Log your weight each day and compare it with the planned curve.",
+        icon: '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>',
+        html: () => `
+<div class="panel" style="margin-bottom:16px">${LEGEND}<div class="chart" id="chart-diary"></div></div><div class="bar"><label>Days shown ${I("diaryDays","n",'min="7" max="1500" style="width:90px"')}</label><span class="note" style="margin:0">Entries beyond this range extend the table automatically.</span></div><div class="tw" style="max-height:70vh"><table><thead><tr><th>Day</th><th>Planned weight</th><th>Actual weight</th><th>Planned − actual</th><th>Daily change</th><th>BMI</th><th>Body fat</th><th class="t">Notes</th></tr></thead><tbody id="diary-body"></tbody></table></div><p class="note">Day 0 uses the weight from the profile. Daily change compares with the last recorded weight (the workbook compared with the previous row, even when empty). Body fat uses the Deurenberg formula. Positive differences (actual below plan) are shown in green.</p>`,
+        update() {
+          const rows = diaryModel();
+          const trs = $$("#diary-body tr");
+          rows.forEach((r, i) => cells(trs[i], [
+            [1, nf(r.t, 2)],
+            [3, nf(r.diff, 2), r.diff == null ? "" : r.diff >= 0 ? "ok" : "bad"],
+            [4, nf(r.daily, 1)],
+            [5, nf(r.bmi, 1)],
+            [6, pct(r.fat)]
+          ]));
+          drawChart(rows, $("#chart-diary"));
+        }
+      };
+      const tabWalks = {
+        id: "walks",
+        title: "Walks",
+        group: "Tracking",
+        desc: "Distance and steps per day, with estimated calories and fat used for walking and Nordic walking.",
+        icon: '<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 000-6H9a3 3 0 010-6h7"/>',
+        html: () => `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:16px">${[["Total distance (km)","w-k0"],["Total steps","w-k1"],["Fat used, walking","w-k2"],["Fat used, Nordic walking","w-k3"],["Fat per km, walking","w-k4"],["Fat per km, Nordic walking","w-k5"]].map(([l,id])=>`<div class="stat panel" style="padding:12px 16px"><div class="k">${l}</div><div class="n" id="${id}">–</div></div>`).join("")}</div><div class="tw" style="max-height:70vh"><table><thead><tr><th>Date</th><th>Weight</th><th>km</th><th>Steps</th><th>kcal walking</th><th>kcal Nordic</th><th>Total kcal walking</th><th>Total kcal Nordic</th><th>Fat walking</th><th>Fat Nordic</th><th>Total fat walking</th><th>Total fat Nordic</th></tr></thead><tbody id="walk-body"></tbody></table></div><p class="note">kcal = km × weight × 0.75 − resting hourly metabolism (Method 3); Nordic walking is ×1.25. Fat = km × weight / 35 (the unit isn't stated in the original workbook). Weight is the one logged that day, otherwise the latest known.</p>`,
+        update() {
+          const trs = $$("#walk-body tr");
+          let kcW = 0,
+            kcN = 0,
+            fW = 0,
+            fN = 0,
+            km = 0,
+            st = 0;
+          const bh = M.bmrH[2];
+          for (let i = 0; i < M.N; i++) {
+            const tr = trs[i];
+            if (!tr) continue;
+            const n = M.startN + i,
+              d = S.days[isoOf(n)] || {},
+              k = num(d.km),
+              w = M.wOn(n);
+            st += num(d.steps) || 0;
+            if (k == null) {
+              cells(tr, [
+                [1, nf(w, 1)],
+                [4, ""],
+                [5, ""],
+                [6, ""],
+                [7, ""],
+                [8, ""],
+                [9, ""],
+                [10, ""],
+                [11, ""]
+              ]);
+              continue
+            }
+            km += k;
+            const e = k !== 0 && bh != null && w != null ? k * w * 0.75 - bh : 0,
+              fr = w != null ? k * w / 35 : null;
+            kcW += e;
+            kcN += e * 1.25;
+            if (fr != null) {
+              fW += fr;
+              fN += fr * 1.25
+            }
+            cells(tr, [
+              [1, nf(w, 1)],
+              [4, nf(e)],
+              [5, nf(e * 1.25)],
+              [6, nf(kcW)],
+              [7, nf(kcN)],
+              [8, nf(fr, 1)],
+              [9, nf(fr == null ? null : fr * 1.25, 1)],
+              [10, nf(fW, 1)],
+              [11, nf(fN, 1)]
+            ]);
+          }
+          set("w-k0", nf(km, 1));
+          set("w-k1", nf(st));
+          set("w-k2", nf(fW, 1));
+          set("w-k3", nf(fN, 1));
+          set("w-k4", km ? nf(fW / km, 2) : "–");
+          set("w-k5", km ? nf(fN / km, 2) : "–");
+          $$("#tab-walks .stat .n").forEach(e => {});
+        }
+      };
+      const tabBP = {
+        id: "pressure",
+        title: "Blood pressure",
+        group: "Tracking",
+        desc: "Morning and evening readings with their averages.",
+        icon: '<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 018-2.7A4.5 4.5 0 0120 10c0 5.5-8 11-8 11z"/>',
+        html: () => `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px">${[["Morning average (sys / dia)","b-k0"],["Morning average pulse","b-k1"],["Evening average (sys / dia)","b-k2"],["Evening average pulse","b-k3"]].map(([l,id])=>`<div class="stat panel" style="padding:12px 16px"><div class="k">${l}</div><div class="n" id="${id}">–</div></div>`).join("")}</div><div class="tw" style="max-height:70vh"><table><thead><tr><th rowspan="2">Date</th><th rowspan="2">Weight</th><th colspan="3">Morning</th><th colspan="3">Evening</th><th rowspan="2" class="t">Notes</th></tr><tr><th>Sys</th><th>Dia</th><th>Pulse</th><th>Sys</th><th>Dia</th><th>Pulse</th></tr></thead><tbody id="bp-body"></tbody></table></div>`,
+        update() {
+          const trs = $$("#bp-body tr"),
+            acc = {
+              mx: [],
+              mn: [],
+              mh: [],
+              ex: [],
+              en: [],
+              eh: []
+            };
+          for (let i = 0; i < M.N; i++) {
+            const n = M.startN + i,
+              d = S.days[isoOf(n)] || {};
+            cells(trs[i], [
+              [1, nf(M.wOn(n), 1)]
+            ]);
+            for (const f in acc) {
+              const v = num(d[f]);
+              if (v != null) acc[f].push(v)
+            }
+          }
+          const av = a => a.length ? sumArr(a) / a.length : null;
+          set("b-k0", nf(av(acc.mx)) + " / " + nf(av(acc.mn)));
+          set("b-k1", nf(av(acc.mh)));
+          set("b-k2", nf(av(acc.ex)) + " / " + nf(av(acc.en)));
+          set("b-k3", nf(av(acc.eh)));
+        }
+      };
+      const parseTime = s => {
+        if (!s) return null;
+        const p = String(s).trim().split(":").map(Number);
+        if (p.some(isNaN) || p.length > 3) return null;
+        while (p.length < 3) p.unshift(0);
+        return p[0] * 3600 + p[1] * 60 + p[2]
+      };
+      const mmss = s => {
+        if (s == null || !isFinite(s)) return "–";
+        const m = Math.floor(s / 60),
+          x = Math.round(s % 60);
+        return m + ":" + String(x).padStart(2, "0")
+      };
+      const tabRuns = {
+        id: "runs",
+        title: "Runs",
+        group: "Tracking",
+        desc: "Log runs with pace and speed, and keep track of your shoe mileage.",
+        icon: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+        html: () => `<div class="bar"><label>Shoes ${I("shoes.name","s",'style="width:190px"')}</label><label>Bought on ${I("shoes.bought","d")}</label><label>Total km <b id="r-tot">–</b></label><button class="btn pri" data-act="addRun">Add run</button></div><div class="tw"><table><thead><tr><th>Date</th><th>Weight</th><th>km</th><th>Time (h:mm:ss)</th><th>Average pace (min/km)</th><th>Average speed (km/h)</th><th></th></tr></thead><tbody id="runs-body"></tbody></table></div>`,
+        build() {
+          $("#runs-body").innerHTML = S.runs.map((r, i) => `<tr><td class="t">${I("runs."+i+".date","d")}</td><td></td><td>${I("runs."+i+".km","n",'class="w-s"')}</td><td>${I("runs."+i+".time","s",'class="w-m" placeholder="0:45:30"')}</td><td></td><td></td><td><button class="btn sm" data-act="delRun" data-i="${i}" aria-label="Delete run">×</button></td></tr>`).join("") || `<tr><td colspan="7" class="t mut">No runs yet. Use “Add run” to log the first one.</td></tr>`
+        },
+        update() {
+          const trs = $$("#runs-body tr");
+          let tot = 0;
+          S.runs.forEach((r, i) => {
+            const tr = trs[i];
+            if (!tr) return;
+            const k = num(r.km),
+              sec = parseTime(r.time),
+              n = dayN(r.date);
+            if (k) tot += k;
+            cells(tr, [
+              [1, nf(n != null ? M.wOn(n) : null, 1)],
+              [4, (sec && k) ? mmss(sec / k) : "–"],
+              [5, (sec && k) ? nf(k / sec * 3600, 2) : "–"]
+            ])
+          });
+          set("r-tot", nf(tot, 1));
+        }
+      };
+      /* ===== Heart rate ===== */
+      const tabHR = {
+        id: "heart",
+        title: "Heart rate",
+        group: "Training",
+        desc: "Maximum heart rate, resting rate and the training zones that follow from them.",
+        icon: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+        html: () => `<div class="grid"><div class="card"><h2>Maximum heart rate</h2>${ROW("Age",O("c-age"))}${ROW("Max HR I (220 − age)",O("c-m1"))}${ROW("Max HR II (208 − 0.7 × age)",O("c-m2"))}</div><div class="card"><h2>Resting heart rate</h2>${[0,1,2,3,4,5].map(i=>ROW("Day "+(i+1),I("restHR."+i))).join("")}${ROW("Resting HR (average)",O("c-rest"))}${ROW("Heart rate reserve I",O("c-r1"))}${ROW("Heart rate reserve II",O("c-r2"))}</div><div class="card wide"><h2>Zones by percentage of max HR</h2><div class="tw"><table><tr><th class="t">% of max HR</th><th>Rate I</th><th>Rate II</th><th class="t">Training type</th></tr>
+${FC_MAX.map((z,i)=>`<tr><td>${z[0]}–${z[1]}%</td><td>${O("c-a"+i)}</td><td>${O("c-b"+i)}</td><td class="t">${z[2]}</td></tr>`).join("")}</table></div></div><div class="card wide"><h2>Zones by percentage of heart rate reserve</h2><div class="tw"><table><tr><th class="t">% of reserve</th><th>Rate I</th><th>Rate II</th><th class="t">Training type</th></tr>
+${FC_RIS.map((z,i)=>`<tr><td>${z[0]}–${z[1]}%</td><td>${O("c-c"+i)}</td><td>${O("c-d"+i)}</td><td class="t">${FC_MAX[i][2]}</td></tr>`).join("")}</table></div><p class="note">Requires at least one resting heart rate measurement.</p></div><div class="card wide"><h2>Safe training ranges</h2><div class="tw"><table><tr><th class="t">Training type</th><th>Min</th><th>Max</th><th>Average</th></tr>
+${FC_MAX.map((z,i)=>`<tr><td class="t">${z[2]}</td><td>${O("c-s"+i)}</td><td>${O("c-t"+i)}</td><td>${O("c-u"+i)}</td></tr>`).join("")}</table></div><p class="note">Combines the zones of both methods: for max-HR zones, the highest minimum and lowest maximum; with heart rate reserve, the higher of the two methods, as in the original workbook. The fixed “threshold” values in the workbook (typed in for one specific age) are not included.</p></div></div>`,
+        update() {
+          const r = fcModel();
+          set("c-age", r.age == null ? "–" : String(r.age));
+          set("c-m1", r.max ? nf(r.max[0]) : "–");
+          set("c-m2", r.max ? nf(r.max[1], 1) : "–");
+          set("c-rest", nf(r.rest, 1));
+          set("c-r1", r.res ? nf(r.res[0], 1) : "–");
+          set("c-r2", r.res ? nf(r.res[1], 1) : "–");
+          FC_MAX.forEach((z, i) => {
+            set("c-a" + i, r.zmax ? r.zmax[i].txt[0] : "–");
+            set("c-b" + i, r.zmax ? r.zmax[i].txt[1] : "–");
+            set("c-c" + i, r.zres ? r.zres[i].txt[0] : "–");
+            set("c-d" + i, r.zres ? r.zres[i].txt[1] : "–");
+            set("c-s" + i, r.safe ? nf(r.safe[i].mn) : "–");
+            set("c-t" + i, r.safe ? nf(r.safe[i].mx) : "–");
+            set("c-u" + i, r.safe ? nf(r.safe[i].avg, 1) : "–")
+          })
+        }
+      };
+      /* ===== Calories burned ===== */
+      const tabCons = {
+        id: "burn",
+        title: "Calories burned",
+        group: "Training",
+        desc: "Energy and weight lost for about 60 activities, by duration and body weight.",
+        icon: '<path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-3 2-5 5-5 8-1-1-2-2-2-4-2 2-3 4-3 6 0 4 3 7 7 7z"/>',
+        html: () => `<div class="grid"><div class="card"><h2>Activity calculator</h2>
+${ROW("Weight (kg), latest logged",O("n-w"))}${ROW("Minutes of activity",I("consumo.minutes"))}${ROW("Activity",SEL("consumo.activity",[["","Choose…"]].concat(SPORTS.map(s=>s[0]))))}
+${ROW("Calories burned",O("n-k"),"big")}${ROW("Weight lost (g)",O("n-g"))}
+<p class="note">kcal = weight × minutes × coefficient × lean-mass fraction (Deurenberg). Weight lost = kcal / 8.</p></div><div class="card"><h2>The health walk</h2>${ROW("Kilometres walked",I("consumo.km"))}${ROW("Calories burned",O("n-wk"))}${ROW("Fat lost",O("n-wf"))}
+<p class="note">kcal = km × weight × 0.9; fat = kcal / 20 (the unit isn't stated in the original workbook).</p></div><div class="card wide"><h2>Calories and weight lost in one hour, by body weight</h2><div class="tw" style="max-height:60vh"><table><thead><tr><th class="t">Activity</th><th>Calories/hour</th><th>Weight lost/hour (g)</th><th>Coefficient</th></tr></thead><tbody>
+${SPORTS.map((s,i)=>`<tr><td>${esc(s[0])}</td><td>${O("n-e"+i)}</td><td>${O("n-f"+i)}</td><td>${s[1]}</td></tr>`).join("")}</tbody></table></div></div></div>`,
+        update() {
+          const w = M.latestW,
+            mn = num(S.consumo.minutes),
+            sp = SPORTS.find(s => s[0] === S.consumo.activity),
+            lean = M.deur.lean;
+          set("n-w", nf(w, 1));
+          const k = (w && mn && sp && lean != null) ? w * mn * sp[1] * lean : null;
+          set("n-k", nf(k));
+          set("n-g", k == null ? "–" : nf(k / 8, 1));
+          const km = num(S.consumo.km),
+            wk = (km != null && w) ? km * w * 0.9 : null;
+          set("n-wk", nf(wk));
+          set("n-wf", wk == null ? "–" : nf(wk / 20, 1));
+          SPORTS.forEach((s, i) => {
+            const e = w ? w * 60 * s[1] : null;
+            set("n-e" + i, nf(e));
+            set("n-f" + i, e == null ? "–" : nf(rnd(e / 8)))
+          })
+        }
+      };
+      /* ===== Zone blocks ===== */
+      const tabZone = {
+        id: "zone",
+        title: "Zone blocks",
+        group: "Nutrition",
+        desc: "Protein requirement and the daily number of blocks for a Zone-style diet.",
+        icon: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
+        html: () => `<div class="grid"><div class="card"><h2>Block calculation</h2>
+${ROW("Lean mass (kg, Deurenberg)",O("z-lean"))}${ROW("Activity index",SEL("zone.index",ZONE_IDX.map(z=>[z[0],z[0].toLocaleString("en-GB",{minimumFractionDigits:1})+" – "+z[1]])))}
+${ROW("Protein needed",O("z-prot"),"big")}${ROW("Blocks per day",I("zone.blocks"))}<p class="note" id="z-hint"></p></div><div class="card"><h2>Daily split</h2><div class="tw"><table><tr><th class="t"></th><th>g</th><th>kcal</th></tr><tr><td>Protein</td><td>${O("z-pg")}</td><td>${O("z-pc")}</td></tr><tr><td>Carbohydrates</td><td>${O("z-cg")}</td><td>${O("z-cc")}</td></tr><tr><td>Fat</td><td>${O("z-fg")}</td><td>${O("z-fc")}</td></tr><tr class="tot"><td>Total</td><td></td><td>${O("z-tot")}</td></tr></table></div><p class="note">One block = 7 g protein, 9 g carbohydrates, 1.5 g fat. Energy: protein 3.75, carbohydrates 4, fat 9 kcal/g.</p></div></div>`,
+        update() {
+          const lean = M.deur.leanKg,
+            ix = num(S.zone.index),
+            b = num(S.zone.blocks);
+          set("z-lean", nf(lean, 1));
+          const prot = (lean != null && ix != null) ? rnd(lean * ix) : null;
+          set("z-prot", prot == null ? "–" : nf(prot) + " g");
+          const hint = document.getElementById("z-hint");
+          if (hint) hint.textContent = prot != null ? `Blocks that match your protein need: ${nf(prot/7,1)} (protein ÷ 7).` : "";
+          const pg = b == null ? null : b * 7,
+            cg = b == null ? null : b * 9,
+            fg = b == null ? null : b * 1.5;
+          set("z-pg", nf(pg, 1));
+          set("z-cg", nf(cg, 1));
+          set("z-fg", nf(fg, 1));
+          const pc = pg == null ? null : rnd(pg * 375 / 100),
+            cc = cg == null ? null : rnd(cg * 400 / 100),
+            fc = fg == null ? null : rnd(fg * 900 / 100);
+          set("z-pc", nf(pc));
+          set("z-cc", nf(cc));
+          set("z-fc", nf(fc));
+          set("z-tot", pc == null ? "–" : nf(pc + cc + fc))
+        }
+      };
+      /* ===== Meal and recipe calculators ===== */
+      function ingRow(kind, i, j, rec) {
+        const base = `${kind}.${i}.rows.${j}`;
+        return `<tr><td class="t">${I(base+".food","s",'class="w-l" list="foodlist" autocomplete="off" placeholder="Search a food"')}</td><td>${I(base+".g","n",'class="w-s"')}</td>${"<td></td>".repeat(rec?9:8)}<td><button class="btn sm" data-act="delIng" data-kind="${kind}" data-i="${i}" data-j="${j}" aria-label="Delete row">×</button></td></tr>`;
+      }
+
+      function buildIng(kind) {
+        const rec = kind === "recipes",
+          arr = S[kind];
+        const head = `<tr><th class="t">Ingredient</th><th>Weight (g)</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th>${rec?"<th>Fibre</th>":""}<th>Zone P</th><th>Zone C</th><th>Zone F</th><th>Points</th><th></th></tr>`;
+        const el = document.getElementById(kind + "-list");
+        if (!el) return;
+        el.innerHTML = arr.map((m, i) => `<div class="meal" id="${kind}-${i}"><div class="meal-h">${I(kind+"."+i+".name","s",`placeholder="${rec?"Recipe name":"Meal or day name"}"`)}<button class="btn sm" data-act="addIng" data-kind="${kind}" data-i="${i}">Add row</button><button class="btn sm" data-act="delMeal" data-kind="${kind}" data-i="${i}">Delete ${rec?"recipe":"table"}</button></div><div class="tw"><table><thead>${head}</thead><tbody>${m.rows.map((r,j)=>ingRow(kind,i,j,rec)).join("")}</tbody><tfoot><tr class="tot"><td class="t">Total</td>${"<td></td>".repeat(rec?10:9)}<td></td></tr><tr class="tot"><td class="t">${rec?"Per 100 g":"Share of calories"}</td>${"<td></td>".repeat(rec?10:9)}<td></td></tr></tfoot></table></div></div>`).join("") || '<p class="note">No tables yet.</p>';
+      }
+
+      function updIng(kind) {
+        const rec = kind === "recipes",
+          tx = (el, i, t) => {
+            const c = el.children[i];
+            if (c) c.textContent = t
+          };
+        S[kind].forEach((m, i) => {
+          const root = document.getElementById(kind + "-" + i);
+          if (!root) return;
+          const trs = $$("tbody tr", root),
+            T = {
+              w: 0,
+              k: 0,
+              p: 0,
+              c: 0,
+              f: 0,
+              fi: 0,
+              pt: 0
+            };
+          m.rows.forEach((r, j) => {
+            const tr = trs[j];
+            if (!tr) return;
+            const f = lookup(r.food),
+              g = num(r.g);
+            tr.children[0].classList.toggle("unk", !!(r.food && !f));
+            if (!f || g == null) {
+              for (let c = 2; c < (rec ? 11 : 10); c++) tx(tr, c, "");
+              return
+            }
+            const q = g / 100,
+              k = f.k * q,
+              p = f.p * q,
+              c = f.c * q,
+              fa = f.f * q,
+              fi = f.fi * q;
+            T.w += g;
+            T.k += k;
+            T.p += p;
+            T.c += c;
+            T.f += fa;
+            T.fi += fi;
+            T.pt += k / 3.6;
+            const v = [nf(k), nf(p, 1), nf(c, 1), nf(fa, 1)];
+            if (rec) v.push(nf(fi, 1));
+            v.push(nf(rnd(p / 7)), nf(rnd(c / 9)), nf(rnd(fa / 3)), nf(k / 3.6, 1));
+            v.forEach((t, x) => tx(tr, 2 + x, t))
+          });
+          const tf = $$("tfoot tr", root);
+          const rowv = S0 => {
+            const v = [nf(S0.k), nf(S0.p, 1), nf(S0.c, 1), nf(S0.f, 1)];
+            if (rec) v.push(nf(S0.fi, 1));
+            v.push(nf(rnd(S0.p / 7)), nf(rnd(S0.c / 9)), nf(rnd(S0.f / 3)), nf(S0.pt, 1));
+            return v
+          };
+          tx(tf[0], 1, nf(T.w));
+          rowv(T).forEach((t, x) => tx(tf[0], 2 + x, t));
+          if (rec) {
+            const s = T.w ? 100 / T.w : 0,
+              P = {
+                k: T.k * s,
+                p: T.p * s,
+                c: T.c * s,
+                f: T.f * s,
+                fi: T.fi * s,
+                pt: T.k * s / 3.6
+              };
+            tx(tf[1], 1, "100");
+            rowv(P).forEach((t, x) => tx(tf[1], 2 + x, T.w ? t : "–"))
+          } else {
+            const kk = T.k;
+            tx(tf[1], 3, kk ? pct(T.p * CFG.kcalProt / kk) : "–");
+            tx(tf[1], 4, kk ? pct(T.c * CFG.kcalCarb / kk) : "–");
+            tx(tf[1], 5, kk ? pct(T.f * CFG.kcalFat / kk) : "–")
+          }
+        })
+      }
+      const mkIngTab = (kind, id, title, desc, addLabel, icon) => ({
+        id,
+        title,
+        group: "Nutrition",
+        desc,
+        icon,
+        html: () => `<div class="bar"><button class="btn pri" data-act="addMeal" data-kind="${kind}">${addLabel}</button></div><div id="${kind}-list"></div>`,
+        build: () => buildIng(kind),
+        update: () => updIng(kind)
+      });
+      const tabMeals = mkIngTab("meals", "meals", "Meal calculator", "Pick foods and enter grams to get calories, macronutrients, Zone blocks and points for a meal or a whole day.", "New meal or day", '<path d="M6 3v7a2 2 0 004 0V3M8 3v18M17 3c-2 2-3 4-3 7s1 3 3 3v8"/>');
+      const tabRecipes = mkIngTab("recipes", "recipes", "Recipe calculator", "Totals for a recipe and values per 100 g of the finished dish, fibre included.", "New recipe", '<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5"/>');
+      /* ===== Food database ===== */
+      let fSort = {
+          k: "n",
+          dir: 1
+        },
+        fQ = "";
+      const FCOLS = [
+        ["n", "Food", "t"],
+        ["it", "Original name (Italian)", "t"],
+        ["k", "Calories"],
+        ["p", "Protein"],
+        ["c", "Carbs"],
+        ["f", "Fat"],
+        ["fi", "Fibre"],
+        ["zp", "Zone P"],
+        ["zc", "Zone C"],
+        ["zg", "Zone F"],
+        ["pt", "Points"]
+      ];
+      const tabFoods = {
+        id: "foods",
+        title: "Food database",
+        group: "Nutrition",
+        desc: "846 foods with values per 100 g. Search by English or Italian name, and add your own foods.",
+        icon: '<path d="M12 7c-3-2-8 0-8 6 0 4 3 8 6 8 1 0 1-.5 2-.5s1 .5 2 .5c3 0 6-4 6-8 0-6-5-8-8-6zM12 7c0-2 1-4 3-5"/>',
+        html: () => `<div class="bar"><label>Search <input type="text" id="fq" placeholder="e.g. chicken or pollo" style="width:240px" autocomplete="off"></label><span class="note" id="fcount" style="margin:0"></span></div><details class="card" style="margin-bottom:14px"><summary>Add a custom food (values per 100 g)</summary><div class="bar" style="margin-top:12px"><input type="text" id="a-n" placeholder="Name" style="width:220px"><input type="number" step="any" id="a-k" placeholder="kcal" style="width:90px"><input type="number" step="any" id="a-p" placeholder="Protein" style="width:90px"><input type="number" step="any" id="a-c" placeholder="Carbs" style="width:90px"><input type="number" step="any" id="a-f" placeholder="Fat" style="width:90px"><input type="number" step="any" id="a-fi" placeholder="Fibre" style="width:90px"><button class="btn pri" data-act="addCustom">Add food</button></div></details><div class="tw" style="max-height:72vh"><table><thead><tr>${FCOLS.map(c=>`<th class="${c[2]||""}" data-sort="${c[0]}" style="cursor:pointer" title="Sort by ${c[1].toLowerCase()}">${c[1]}</th>`).join("")}<th></th></tr></thead><tbody id="foods-body"></tbody></table></div><p class="note">Zone blocks: protein ÷ 7, carbohydrates ÷ 9, fat ÷ 3 (rounded); points = kcal ÷ 3.6.</p>`,
+        build() {
+          const q = fQ.trim().toLowerCase();
+          let a = ALL.filter(f => !q || f.n.toLowerCase().includes(q) || (f.it || "").toLowerCase().includes(q));
+          const val = f => fSort.k === "n" ? f.n.toLowerCase() : fSort.k === "it" ? (f.it || "").toLowerCase() : fSort.k === "zp" ? f.p / 7 : fSort.k === "zc" ? f.c / 9 : fSort.k === "zg" ? f.f / 3 : fSort.k === "pt" ? f.k / 3.6 : f[fSort.k];
+          a = a.slice().sort((x, y) => {
+            const u = val(x),
+              v = val(y);
+            return (u < v ? -1 : u > v ? 1 : 0) * fSort.dir
+          });
+          const cnt = document.getElementById("fcount");
+          if (cnt) cnt.textContent = `${a.length} of ${ALL.length} foods`;
+          const b = document.getElementById("foods-body");
+          if (!b) return;
+          b.innerHTML = a.length ? a.map(f => `<tr><td class="t">${esc(f.n)}${f.custom?' <span class="mut">(custom)</span>':""}</td><td class="t mut">${esc(f.it)}</td><td>${nf(f.k)}</td><td>${nf(f.p,1)}</td><td>${nf(f.c,1)}</td><td>${nf(f.f,1)}</td><td>${nf(f.fi,1)}</td><td>${nf(rnd(f.p/7))}</td><td>${nf(rnd(f.c/9))}</td><td>${nf(rnd(f.f/3))}</td><td>${nf(rnd(f.k/3.6))}</td><td>${f.custom?`<button class="btn sm" data-act="delCustom" data-i="${f.ci}" aria-label="Delete food">×</button>`:""}</td></tr>`).join("") : '<tr><td colspan="12" class="t mut">No food matches this search. Try a shorter word, or add it as a custom food.</td></tr>'
+        },
+        update() {}
+      };
+      /* ===== App shell ===== */
+      const TABS = [tabDash, tabProfile, tabEnergy, tabGoal, tabDiary, tabWalks, tabBP, tabRuns, tabHR, tabCons, tabZone, tabMeals, tabRecipes, tabFoods];
+      let cur = "overview";
+      const activeTab = () => TABS.find(t => t.id === cur);
+
+      function refresh() {
+        M = calc();
+        const t = activeTab();
+        if (t && t.update) t.update()
+      }
+
+      function applyTheme() {
+        const t = S.theme || "system",
+          r = document.documentElement;
+        if (t === "system") r.removeAttribute("data-theme");
+        else r.setAttribute("data-theme", t);
+        const l = document.getElementById("theme-l");
+        if (l) l.textContent = "Theme: " + t
+      }
+
+      function renderNav() {
+        let h = "",
+          g = null;
+        TABS.forEach(t => {
+          if (t.group !== g) {
+            g = t.group;
+            if (g) h += `<div class="grp">${g}</div>`
+          }
+          h += `<button class="nb" data-tab="${t.id}"${t.id===cur?' aria-current="page"':""}><svg viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg>${t.title}</button>`
+        });
+        $("#nav").innerHTML = h
+      }
+
+      function renderAll() {
+        indexFoods();
+        M = calc();
+        applyTheme();
+        renderNav();
+        $("#main").innerHTML = TABS.map(t => `<section class="tab${t.id===cur?" on":""}" id="tab-${t.id}" aria-label="${esc(t.title)}"><header class="ph"><div><h1>${t.title}</h1><p>${t.desc}</p></div></header>${t.html()}</section>`).join("");
+        buildRanges();
+        TABS.forEach(t => t.build && t.build());
+        refresh();
+      }
+
+      function go(id) {
+        cur = id;
+        renderNav();
+        $$(".tab").forEach(s => s.classList.toggle("on", s.id === "tab-" + id));
+        $("#side").classList.remove("open");
+        try {
+          history.replaceState(null, "", "#" + id)
+        } catch (e) {}
+        refresh();
+        window.scrollTo(0, 0);
+        document.title = (id === "overview" ? "" : activeTab().title + " · ") + "BioMetaCalc"
+      }
+      document.addEventListener("input", e => {
+        const t = e.target;
+        if (t.id === "fq") {
+          fQ = t.value;
+          tabFoods.build();
+          return
+        }
+        const p = t.dataset && t.dataset.p;
+        if (!p) return;
+        const ty = t.dataset.t;
+        let v = ty === "n" ? num(t.value) : (ty === "d" ? (t.value || null) : t.value);
+        if (ty === "n" && v != null && p === "diaryDays" && v < 1) v = 1;
+        setP(S, p, ty === "s" && /^days\./.test(p) && v === "" ? null : v);
+        save();
+        if (p === "goal.start" || p === "diaryDays") buildRanges();
+        refresh()
+      });
+      document.addEventListener("click", e => {
+        const th = e.target.closest("th[data-sort]");
+        if (th) {
+          const k = th.dataset.sort;
+          fSort = fSort.k === k ? {
+            k,
+            dir: -fSort.dir
+          } : {
+            k,
+            dir: 1
+          };
+          tabFoods.build();
+          return
+        }
+        const nb = e.target.closest("[data-tab]");
+        if (nb) {
+          go(nb.dataset.tab);
+          return
+        }
+        const b = e.target.closest("[data-act]");
+        if (!b) return;
+        const a = b.dataset.act,
+          i = +b.dataset.i,
+          j = +b.dataset.j,
+          kind = b.dataset.kind;
+        const blank = n => Array.from({
+          length: n
+        }, () => ({
+          food: "",
+          g: null
+        }));
+        switch (a) {
+          case "theme": {
+            const o = ["system", "light", "dark"];
+            S.theme = o[(o.indexOf(S.theme || "system") + 1) % 3];
+            applyTheme();
+            save();
+            return
+          }
+          case "export": {
+            const blob = new Blob([JSON.stringify(S, null, 1)], {
+                type: "application/json"
+              }),
+              u = URL.createObjectURL(blob),
+              l = document.createElement("a");
+            l.href = u;
+            l.download = "biometacalc-data-" + isoOf(todayN()) + ".json";
+            l.click();
+            setTimeout(() => URL.revokeObjectURL(u), 1000);
+            return
+          }
+          case "import":
+            $("#file").click();
+            return;
+          case "reset":
+            if (confirm("Restore the sample data? Anything you entered will be replaced.")) {
+              S = defaults();
+              save();
+              renderAll()
+            }
+            return;
+          case "useLatest":
+            S.profile.weight = M.latestW;
+            save();
+            renderAll();
+            return;
+          case "addRun":
+            S.runs.push({
+              date: isoOf(todayN()),
+              km: null,
+              time: ""
+            });
+            tabRuns.build();
+            break;
+          case "delRun":
+            S.runs.splice(i, 1);
+            tabRuns.build();
+            break;
+          case "addMeal":
+            S[kind].push({
+              name: "",
+              rows: blank(kind === "recipes" ? 15 : 10)
+            });
+            buildIng(kind);
+            break;
+          case "delMeal":
+            if (confirm("Delete this table?")) {
+              S[kind].splice(i, 1);
+              buildIng(kind)
+            }
+            break;
+          case "addIng":
+            S[kind][i].rows.push({
+              food: "",
+              g: null
+            });
+            buildIng(kind);
+            break;
+          case "delIng":
+            S[kind][i].rows.splice(j, 1);
+            buildIng(kind);
+            break;
+          case "addCustom": {
+            const n = ($("#a-n").value || "").trim(),
+              f = id => num($("#" + id).value);
+            if (!n || f("a-k") == null) {
+              alert("Enter at least a name and the calories.");
+              return
+            }
+            if (FMAP.has(n.toLowerCase())) {
+              alert("A food with this name already exists.");
+              return
+            }
+            S.customFoods.push({
+              n,
+              k: f("a-k"),
+              p: f("a-p") || 0,
+              c: f("a-c") || 0,
+              f: f("a-f") || 0,
+              fi: f("a-fi") || 0
+            });
+            save();
+            indexFoods();
+            tabFoods.build();
+            ["a-n", "a-k", "a-p", "a-c", "a-f", "a-fi"].forEach(id => $("#" + id).value = "");
+            return
+          }
+          case "delCustom":
+            S.customFoods.splice(i, 1);
+            save();
+            indexFoods();
+            tabFoods.build();
+            refresh();
+            return;
+        }
+        save();
+        refresh()
+      });
+      let rz;
+      window.addEventListener("resize", () => {
+        clearTimeout(rz);
+        rz = setTimeout(refresh, 150)
+      });
+      $("#menu").addEventListener("click", () => $("#side").classList.toggle("open"));
+      $("#file").addEventListener("change", e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const o = JSON.parse(r.result);
+            if (!o || typeof o !== "object" || !o.profile || !o.goal) throw 0;
+            S = migrate(Object.assign(defaults(), o));
+            save();
+            renderAll()
+          } catch (x) {
+            alert("This file isn't a valid BioMetaCalc export.")
+          }
+        };
+        r.readAsText(f);
+        e.target.value = ""
+      });
+      S = load(); {
+        const h = location.hash.slice(1);
+        if (TABS.some(t => t.id === h)) cur = h
+      }
+      renderAll();
+    </script>
+  </body>
+</html>
