@@ -1,0 +1,16 @@
+{
+  "name": "BioMetaCalc",
+  "short_name": "BioMetaCalc",
+  "description": "Offline web app for BMI, body composition, calorie needs, weight-loss planning, training logs, and nutrition calculators",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2f5f0",
+  "theme_color": "#1a7f45",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a7f45'/%3E%3Cpath d='M6 21l6-7 5 4 9-10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
